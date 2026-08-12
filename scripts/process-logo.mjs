@@ -14,7 +14,7 @@ const fullLogoSource = join(
   "projects",
   "c-Users-dell-Downloads-aavishkar-launchpad-main",
   "assets",
-  "c__Users_dell_AppData_Roaming_Cursor_User_workspaceStorage_91f29bd522a297119704ba1843911d11_images_ChatGPT_Image_Aug_11__2026__10_06_34_AM-removebg-preview__1_-removebg-preview-Photoroom-40a72cb2-b7f3-449c-b08a-e4f808724632.png",
+  "c__Users_dell_AppData_Roaming_Cursor_User_workspaceStorage_91f29bd522a297119704ba1843911d11_images_169593-13e68764-784f-4414-bdce-88a6e5b6bc37.png",
 );
 
 async function writeFullLogo(input, output) {
@@ -27,15 +27,12 @@ async function writeFullLogo(input, output) {
 async function writeFaviconFromLogo(input) {
   const inputBuffer = readFileSync(input);
   const meta = await sharp(inputBuffer).metadata();
-  const cropHeight = Math.round(meta.height * 0.58);
+  const cropHeight = Math.round(meta.height * 0.42);
   const output = join(publicDir, "favicon.png");
 
   await sharp(inputBuffer)
     .extract({ left: 0, top: 0, width: meta.width, height: cropHeight })
-    .resize(512, 512, {
-      fit: "contain",
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    })
+    .resize(512, 512, { fit: "contain" })
     .png({ compressionLevel: 9 })
     .toFile(output);
 
