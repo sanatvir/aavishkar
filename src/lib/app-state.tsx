@@ -938,7 +938,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
       reports,
       setReportStatus: (id, status) => {
-        setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+        setReports((prev) => {
+          if (status === "Dismissed" || status === "Restricted") {
+            return prev.filter((r) => r.id !== id);
+          }
+          return prev.map((r) => (r.id === id ? { ...r, status } : r));
+        });
         void syncReportStatus(id, status);
         toast.message(`Report ${status.toLowerCase()}`);
       },

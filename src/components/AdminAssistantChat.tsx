@@ -18,7 +18,6 @@ import {
   clearStoredMessages,
   loadStoredMessages,
   parseAssistantMarkdown,
-  QUICK_PROMPTS,
   splitInlineMarkdown,
   storeMessages,
   type AssistantMessage,
@@ -323,21 +322,6 @@ export function AdminAssistantChat() {
                       </div>
                     )}
 
-                    {!isUser && msg.suggestedFollowUps && msg.suggestedFollowUps.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {msg.suggestedFollowUps.map((followUp) => (
-                          <button
-                            key={followUp}
-                            type="button"
-                            disabled={busy}
-                            onClick={() => void send(followUp)}
-                            className="rounded-full border border-border bg-secondary/60 px-3 py-1 text-left text-xs transition hover:bg-secondary disabled:opacity-50"
-                          >
-                            {followUp}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               );
@@ -357,20 +341,6 @@ export function AdminAssistantChat() {
 
         <div className="border-t border-border/80 bg-card/40 p-4 sm:p-5">
           <div className="mx-auto max-w-3xl space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {QUICK_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void send(prompt)}
-                  className="rounded-full border border-border/80 bg-background px-3 py-1.5 text-left text-xs text-muted-foreground transition hover:border-accent/40 hover:text-foreground disabled:opacity-50"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-
             <div className="flex gap-2">
               <Textarea
                 ref={textareaRef}

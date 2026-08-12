@@ -24,11 +24,17 @@ const tone = {
 
 function AdminReports() {
   const { reports, setReportStatus } = useAppState();
+  const queue = reports.filter((r) => r.status === "Open" || r.status === "Reviewing");
 
   return (
     <>
       <PageHeader title="Reports" subtitle="Moderation queue for reported users and content." />
       <div className="surface overflow-x-auto">
+        {queue.length === 0 ? (
+          <p className="px-5 py-10 text-center text-sm text-muted-foreground">
+            No open reports — the moderation queue is clear.
+          </p>
+        ) : (
         <table className="w-full min-w-[760px] text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
@@ -40,7 +46,7 @@ function AdminReports() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {reports.map((r) => (
+            {queue.map((r) => (
               <tr key={r.id} className="hover:bg-secondary/50">
                 <td className="px-5 py-4 font-medium">{r.target}</td>
                 <td className="px-5 py-4 text-muted-foreground">{r.kind}</td>
@@ -66,6 +72,7 @@ function AdminReports() {
             ))}
           </tbody>
         </table>
+        )}
       </div>
     </>
   );
