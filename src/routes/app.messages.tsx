@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Send } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui-kit/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,9 @@ import { useAppState } from "@/lib/app-state";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/messages")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    with: typeof search.with === "string" ? search.with : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Messages — AAVISHKAR" },
@@ -20,9 +23,19 @@ export const Route = createFileRoute("/app/messages")({
 });
 
 function MessagesPage() {
+  const { with: withStudentId } = Route.useSearch();
   const { conversations, sendMessage, markConversationRead, findStudent } = useAppState();
   const [activeId, setActiveId] = useState(conversations[0]?.id ?? "");
   const [text, setText] = useState("");
+
+  useEffect(() => {
+    if (!withStudentId) return;
+    const match = conversations.find((c) => c.withId === withStudentId);
+    if (match) {
+      setActiveId(match.id);
+      markConversationRead(match.id);
+    }
+  }, [withStudentId, conversations, markConversationRead]);
 
   const active = conversations.find((c) => c.id === activeId) ?? conversations[0];
   const partner = active ? findStudent(active.withId) : undefined;
@@ -77,7 +90,7 @@ function MessagesPage() {
 
         <div className="flex-1 space-y-3 overflow-y-auto p-5">
           {active?.messages.map((m, i) => (
-            <div key={i} className={cn("flex", m.fromMe ? "justify-end" : "justify-start")}>
+            <div key={`${m.time}-${m.text}-${i}`} className={cn("flex", m.fromMe ? "justify-end" : "justify-start")}>
               <div
                 className={cn(
                   "max-w-[75%] rounded-2xl px-4 py-2.5 text-sm",

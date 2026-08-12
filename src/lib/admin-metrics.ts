@@ -53,6 +53,7 @@ export function buildSkillDistribution(students: Student[]): SkillCount[] {
 export function buildCategorySplit(ideas: Idea[]): CategoryCount[] {
   const counts = new Map<string, number>();
   for (const idea of ideas) {
+    if (idea.reviewStatus === "pending") continue;
     counts.set(idea.category, (counts.get(idea.category) ?? 0) + 1);
   }
   return [...counts.entries()]

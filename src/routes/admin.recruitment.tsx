@@ -81,7 +81,7 @@ function RecruitmentPage() {
             </div>
             <p className="text-sm">
               <span className="font-semibold">
-                {applications.filter((a) => a.recruitmentId === r.id).length || r.applications}
+                {applications.filter((a) => a.recruitmentId === r.id).length}
               </span>{" "}
               <span className="text-muted-foreground">applications · closes {r.closes}</span>
             </p>

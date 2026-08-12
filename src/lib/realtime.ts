@@ -23,6 +23,13 @@ export function subscribeAppChanges(userId: string, onChange: () => void) {
     .on("postgres_changes", { event: "*", schema: "public", table: "recruitments" }, schedule)
     .on("postgres_changes", { event: "*", schema: "public", table: "opportunities" }, schedule)
     .on("postgres_changes", { event: "*", schema: "public", table: "ideas" }, schedule)
+    .on("postgres_changes", { event: "*", schema: "public", table: "community_members" }, schedule)
+    .on("postgres_changes", { event: "*", schema: "public", table: "connections" }, schedule)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "community_join_applications" },
+      schedule,
+    )
     .subscribe();
 
   return () => {

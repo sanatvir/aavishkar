@@ -167,7 +167,7 @@ function IdeaDetail() {
               {joined ? "You joined this idea" : "Join Idea"}
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link to="/app/messages">Message Creator</Link>
+              <Link to="/app/messages" search={{ with: idea.creatorId }}>Message Creator</Link>
             </Button>
             <Button
               variant="outline"

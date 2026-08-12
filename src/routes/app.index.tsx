@@ -163,7 +163,7 @@ function Dashboard() {
           <SectionHeading title="Your Communities" subtitle="Recently active" />
           <div className="space-y-3">
             {myCommunities.map((c) => (
-              <Link key={c.id} to="/app/communities" className="surface lift flex items-center gap-4 p-4">
+              <Link key={c.id} to="/app/communities/$id" params={{ id: c.id }} className="surface lift flex items-center gap-4 p-4">
                 <Avatar initials={c.name.slice(0, 2).toUpperCase()} accent={c.accent} size="sm" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{c.name}</p>

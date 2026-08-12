@@ -22,9 +22,11 @@ import type { NewReport } from "@/lib/types";
 
 export function ReportDialog({
   target,
+  targetId,
   defaultKind = "User",
 }: {
   target: string;
+  targetId?: string;
   defaultKind?: NewReport["kind"];
 }) {
   const { submitReport } = useAppState();
@@ -71,7 +73,7 @@ export function ReportDialog({
               variant="destructive"
               onClick={() => {
                 if (!reason.trim()) return;
-                submitReport({ target, kind, reason: reason.trim() });
+                submitReport({ target, targetId, kind, reason: reason.trim() });
                 setOpen(false);
                 setReason("");
               }}

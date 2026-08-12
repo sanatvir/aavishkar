@@ -176,8 +176,8 @@ function AdminDashboard() {
         <div className="surface p-5">
           <SectionHeading title="Recent activity" />
           <ul className="space-y-3">
-            {activity.map((a) => (
-              <li key={`${a.text}-${a.time}`} className="text-sm">
+            {activity.map((a, i) => (
+              <li key={`${i}-${a.text}-${a.time}`} className="text-sm">
                 <p className="text-foreground/85">{a.text}</p>
                 <p className="text-xs text-muted-foreground">{a.time}</p>
               </li>

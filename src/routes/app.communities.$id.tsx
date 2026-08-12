@@ -188,8 +188,8 @@ function CommunityDetail() {
             <section className="surface p-6">
               <SectionHeading title="Recent activity" subtitle="What's happening in this community" />
               <ul className="mt-4 space-y-3">
-                {community.activity.map((a) => (
-                  <li key={a} className="flex gap-2 text-sm text-foreground/85">
+                {community.activity.map((a, i) => (
+                  <li key={`${i}-${a}`} className="flex gap-2 text-sm text-foreground/85">
                     <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                     {a}
                   </li>

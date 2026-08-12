@@ -226,8 +226,8 @@ function AdminCommunityDetail() {
               <Megaphone className="h-4 w-4" /> Activity log
             </h2>
             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-              {community.activity.map((a) => (
-                <li key={a}>· {a}</li>
+              {community.activity.map((a, i) => (
+                <li key={`${i}-${a}`}>· {a}</li>
               ))}
             </ul>
           </div>

@@ -24,7 +24,7 @@ export const Route = createFileRoute("/app/recruitment")({
 });
 
 function RecruitmentPage() {
-  const { recruitments, hasApplied, applyToRecruitment } = useAppState();
+  const { recruitments, applications, hasApplied, applyToRecruitment } = useAppState();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [note, setNote] = useState("");
 
@@ -56,7 +56,8 @@ function RecruitmentPage() {
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {r.applications} applications · closes {r.closes}
+                  {applications.filter((a) => a.recruitmentId === r.id).length} applications · closes{" "}
+                  {r.closes}
                 </p>
                 <Button
                   className="mt-auto"

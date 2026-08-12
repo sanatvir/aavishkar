@@ -147,6 +147,7 @@ export type Recruitment = {
 export type Report = {
   id: string;
   target: string;
+  targetId?: string;
   kind: "User" | "Comment" | "Idea";
   reason: string;
   date: string;
@@ -155,6 +156,7 @@ export type Report = {
 
 export type NewReport = {
   target: string;
+  targetId?: string;
   kind: Report["kind"];
   reason: string;
 };

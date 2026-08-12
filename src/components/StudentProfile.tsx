@@ -57,7 +57,7 @@ export function StudentProfile({ student, embedded }: { student: Student; embedd
                   {connected ? "Connected" : "Connect"}
                 </Button>
                 <Button asChild variant="outline" className="gap-2">
-                  <Link to="/app/messages">
+                  <Link to="/app/messages" search={{ with: student.id }}>
                     <MessageSquare className="h-4 w-4" /> Message
                   </Link>
                 </Button>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { INSTITUTION_NAME, PLATFORM_NAME } from "./brand";
 import { toast } from "sonner";
 import {
@@ -60,6 +60,8 @@ import {
   ensureSeeded,
   insertApplication,
   insertCommunity,
+  insertCommunityJoinApplication,
+  insertCommunityPost,
   insertEvent,
   insertIdea,
   insertIdeaComment,
@@ -70,13 +72,14 @@ import {
   insertReport,
   loadAppData,
   logActivity,
+  publishIdeaLive,
   registerOpportunity,
   syncApplicationStage,
   syncCommunity,
+  syncCommunityJoinApplicationStatus,
   syncConnection,
   syncConversationRead,
   syncJoinIdea,
-  syncIdeaReviewStatus,
   syncIdeaSupport,
   syncNotificationsRead,
   syncPlatformSettings,
@@ -106,6 +109,13 @@ type NewIdea = {
 };
 
 type NewProject = { title: string; description: string; deadline: string };
+
+function joinApplicationSortKey(app: CommunityJoinApplication): number {
+  const fromId = /^cja-(\d+)$/.exec(app.id);
+  if (fromId) return Number(fromId[1]);
+  const parsed = Date.parse(app.submitted);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
 
 type ProfileUpdate = {
   name: string;
@@ -277,6 +287,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     recruitmentAlerts: true,
   });
   const [discoverHiddenIds, setDiscoverHiddenIds] = useState<string[]>([]);
+  const loadGeneration = useRef(0);
 
   const applySnapshot = (data: NonNullable<Awaited<ReturnType<typeof loadAppData>>>) => {
     setStudents(data.students);
@@ -308,12 +319,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       institution: INSTITUTION_NAME,
     });
     setDiscoverHiddenIds(data.discoverHiddenIds);
+    setCommunityJoinApplications(data.communityJoinApplications);
+    setCommunityPosts(data.communityPosts);
   };
 
   const refreshData = async () => {
     if (!isSupabaseConfigured) return;
+    const generation = ++loadGeneration.current;
     const data = await loadAppData(userId);
-    if (data) applySnapshot(data);
+    if (generation !== loadGeneration.current || !data) return;
+    applySnapshot(data);
   };
 
   useEffect(() => {
@@ -356,9 +371,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     };
 
     const notifyStudent = (targetId: string, kind: Notification["kind"], text: string) => {
-      if (targetId === userId) return;
+      if (targetId === userId) {
+        setNotifications((prev) => [
+          { id: `n-${Date.now()}`, kind, text, time: "just now", read: false },
+          ...prev,
+        ]);
+        return;
+      }
       void insertNotification(targetId, kind, text);
     };
+
+    const userScopedProjects = projects.map((p) => ({
+      ...p,
+      mine: p.memberIds.includes(userId),
+    }));
 
     const adminStats = buildAdminStats({
       students,
@@ -459,7 +485,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         if (joinedCommunities.includes(communityId)) return "member";
         const app = communityJoinApplications
           .filter((a) => a.studentId === userId && a.communityId === communityId)
-          .sort((a, b) => b.id.localeCompare(a.id))[0];
+          .sort((a, b) => joinApplicationSortKey(b) - joinApplicationSortKey(a))[0];
         if (!app) return "none";
         if (app.status === "Pending") return "pending";
         if (app.status === "Rejected") return "rejected";
@@ -489,6 +515,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           status: "Pending",
         };
         setCommunityJoinApplications((prev) => [...prev, app]);
+        void insertCommunityJoinApplication(app);
         pushActivity(`${me.name} applied to join “${community.name}”`);
         toast.success("Application submitted", {
           description: "A coordinator will review your request.",
@@ -519,6 +546,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setCommunityJoinApplications((prev) =>
           prev.map((a) => (a.id === id ? { ...a, status } : a)),
         );
+        void syncCommunityJoinApplicationStatus(id, status);
 
         const student = students.find((s) => s.id === app.studentId);
         const community = communities.find((c) => c.id === app.communityId);
@@ -577,6 +605,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             c.id === communityId ? { ...c, activity: [text.trim(), ...c.activity].slice(0, 6) } : c,
           ),
         );
+        void insertCommunityPost(post, text.trim());
         pushActivity(`${coordinatorName} posted in ${communityName}`);
         toast.success("Posted to community feed");
       },
@@ -729,7 +758,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         }
       },
 
-      projects,
+      projects: userScopedProjects,
       addProject: (draft) => {
         if (!platformSettings.allowStudentProjects) {
           toast.error("Project creation is disabled by your ATL coordinator.");
@@ -938,12 +967,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
       reports,
       setReportStatus: (id, status) => {
+        const report = reports.find((r) => r.id === id);
         setReports((prev) => {
           if (status === "Dismissed" || status === "Restricted") {
             return prev.filter((r) => r.id !== id);
           }
           return prev.map((r) => (r.id === id ? { ...r, status } : r));
         });
+        if (status === "Restricted" && report) {
+          const studentId =
+            report.targetId ??
+            (report.kind === "User"
+              ? students.find((s) => report.target.includes(s.name))?.id
+              : undefined);
+          if (studentId) {
+            setStudents((prev) =>
+              prev.map((s) => (s.id === studentId ? { ...s, status: "Inactive" } : s)),
+            );
+            void updateStudentStatus(studentId, "Inactive");
+          }
+        }
         void syncReportStatus(id, status);
         toast.message(`Report ${status.toLowerCase()}`);
       },
@@ -951,6 +994,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const report: Report = {
           id: `r-${Date.now()}`,
           target: draft.target,
+          targetId: draft.targetId,
           kind: draft.kind,
           reason: draft.reason,
           date: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
@@ -991,12 +1035,24 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         toast.message("Opportunity removed");
       },
       publishIdea: (id) => {
+        const idea = ideas.find((i) => i.id === id);
+        if (!idea) return;
         setIdeas((prev) =>
           prev.map((i) =>
-            i.id === id ? { ...i, reviewStatus: "published", supports: Math.max(1, i.supports) } : i,
+            i.id === id
+              ? {
+                  ...i,
+                  reviewStatus: "published",
+                  supports: Math.max(1, i.supports),
+                  collaborators: Math.max(1, i.collaborators),
+                  interested: i.interested.includes(i.creatorId)
+                    ? i.interested
+                    : [...i.interested, i.creatorId],
+                }
+              : i,
           ),
         );
-        void syncIdeaReviewStatus(id, "published");
+        void publishIdeaLive(id, idea.creatorId);
         toast.success("Idea published to the school");
       },
       restrictStudent: (id) => {

@@ -30,6 +30,8 @@ import type {
   Opportunity,
   Recruitment,
   Report,
+  CommunityJoinApplication,
+  CommunityPost,
 } from "../types";
 import { isSupabaseConfigured, supabase } from "./client";
 
@@ -113,6 +115,8 @@ export type AppDataSnapshot = {
   platformSettings: PlatformSettings;
   discoverHiddenIds: string[];
   communityMembers: Record<string, string[]>;
+  communityJoinApplications: CommunityJoinApplication[];
+  communityPosts: CommunityPost[];
 };
 
 const seedCommunityExtras = new Map(
@@ -475,6 +479,8 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
     allSettingsRes,
     registrationsRes,
     communityMembersAllRes,
+    joinAppsRes,
+    communityPostsRes,
   ] = await Promise.all([
     supabase.from("students").select("*").order("name"),
     supabase.from("communities").select("*").order("name"),
@@ -502,6 +508,8 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
     supabase.from("student_settings").select("student_id, show_in_discover"),
     supabase.from("opportunity_registrations").select("opportunity_id").eq("student_id", userId),
     supabase.from("community_members").select("community_id"),
+    supabase.from("community_join_applications").select("*"),
+    supabase.from("community_posts").select("*").order("created_at", { ascending: false }),
   ]);
 
   const events: PlatformEvent[] = eventsRes.error
@@ -582,9 +590,30 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
       files: row.files ?? [],
       updates: row.updates ?? [],
       chat: row.chat ?? [],
-      mine: row.mine,
+      mine: (row.member_ids ?? []).includes(userId),
     };
   });
+
+  const communityJoinApplications: CommunityJoinApplication[] = joinAppsRes.error
+    ? []
+    : (joinAppsRes.data ?? []).map((row) => ({
+        id: row.id,
+        studentId: row.student_id,
+        communityId: row.community_id,
+        submitted: row.submitted,
+        note: row.note ?? "",
+        status: row.status as CommunityJoinApplication["status"],
+      }));
+
+  const communityPosts: CommunityPost[] = communityPostsRes.error
+    ? []
+    : (communityPostsRes.data ?? []).map((row) => ({
+        id: row.id,
+        communityId: row.community_id,
+        authorId: row.author_id,
+        text: row.text,
+        time: formatTime(row.created_at),
+      }));
 
   const reads = new Map((readsRes.data ?? []).map((r) => [r.conversation_id, r.unread_count]));
   const msgsByConvo = new Map<string, typeof messagesRes.data>();
@@ -658,7 +687,15 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
       note: a.note,
       stage: a.stage,
     })),
-    reports: (reportsRes.data ?? []) as Report[],
+    reports: (reportsRes.data ?? []).map((row) => ({
+      id: row.id,
+      target: row.target,
+      targetId: (row as { target_id?: string }).target_id,
+      kind: row.kind as Report["kind"],
+      reason: row.reason,
+      date: row.date,
+      status: row.status as Report["status"],
+    })),
     events,
     activity: activityFromLog,
     studentSettings: studentSettingsRes.data
@@ -669,6 +706,8 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
       : defaultPlatformSettings(),
     discoverHiddenIds,
     communityMembers: communityMembersMap,
+    communityJoinApplications,
+    communityPosts,
   };
 }
 
@@ -1035,6 +1074,7 @@ export async function insertReport(report: Report) {
     reason: report.reason,
     date: report.date,
     status: report.status,
+    ...(report.targetId ? { target_id: report.targetId } : {}),
   });
 }
 
@@ -1049,6 +1089,52 @@ export async function registerOpportunity(userId: string, opportunityId: string)
 export async function syncIdeaReviewStatus(ideaId: string, status: "published" | "pending") {
   if (!isSupabaseConfigured) return;
   await supabase.from("ideas").update({ review_status: status }).eq("id", ideaId);
+}
+
+export async function publishIdeaLive(ideaId: string, creatorId: string) {
+  if (!isSupabaseConfigured) return;
+  await supabase.from("ideas").update({ review_status: "published", supports: 1, collaborators: 1 }).eq("id", ideaId);
+  await supabase.from("idea_supporters").upsert(
+    { student_id: creatorId, idea_id: ideaId },
+    { onConflict: "student_id,idea_id", ignoreDuplicates: true },
+  );
+}
+
+export async function insertCommunityJoinApplication(app: CommunityJoinApplication) {
+  if (!isSupabaseConfigured) return;
+  await supabase.from("community_join_applications").insert({
+    id: app.id,
+    student_id: app.studentId,
+    community_id: app.communityId,
+    submitted: app.submitted,
+    note: app.note,
+    status: app.status,
+  });
+}
+
+export async function syncCommunityJoinApplicationStatus(
+  id: string,
+  status: CommunityJoinApplication["status"],
+) {
+  if (!isSupabaseConfigured) return;
+  await supabase.from("community_join_applications").update({ status }).eq("id", id);
+}
+
+export async function insertCommunityPost(post: CommunityPost, activityLine: string) {
+  if (!isSupabaseConfigured) return;
+  await supabase.from("community_posts").insert({
+    id: post.id,
+    community_id: post.communityId,
+    author_id: post.authorId,
+    text: post.text,
+  });
+  const { data } = await supabase
+    .from("communities")
+    .select("activity")
+    .eq("id", post.communityId)
+    .maybeSingle();
+  const activity = [activityLine, ...((data?.activity as string[] | null) ?? [])].slice(0, 6);
+  await supabase.from("communities").update({ activity }).eq("id", post.communityId);
 }
 
 export async function updateStudentStatus(studentId: string, status: Student["status"]) {
