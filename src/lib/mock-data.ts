@@ -1,0 +1,737 @@
+// Seed fixtures for local demo and first-time DB seed (when VITE_ENABLE_DEMO_SEED=true).
+
+export type * from "./types";
+import type { Application, Community, Conversation, Idea, Notification, Opportunity, Project, Recruitment, Report, Student } from "./types";
+
+export const currentUser: Student = {
+  id: "sanatvir",
+  name: "Sanatvir Singh",
+  className: "Class X",
+  initials: "SS",
+  bio: "Interested in AI, technology and building products.",
+  skills: ["Python", "AI", "Web Development", "UI/UX"],
+  interests: ["Entrepreneurship", "Robotics", "Technology"],
+  availability: "Open to teams",
+  projects: ["AI Waste Sorter", "Student Innovation Portal"],
+  achievements: ["ATL Project", "School Competition"],
+  status: "Active",
+  accent: "from-primary to-accent",
+};
+
+export const students: Student[] = [
+  currentUser,
+  {
+    id: "shaurya",
+    name: "Shaurya Sharma",
+    className: "Class X-B",
+    initials: "SH",
+    bio: "Building things that solve real problems.",
+    skills: ["Robotics", "Arduino", "Electronics", "CAD"],
+    interests: ["Robotics", "Technology"],
+    availability: "Available",
+    projects: ["AI Waste Sorter"],
+    achievements: ["ATL Robotics Finalist"],
+    status: "Active",
+    accent: "from-accent to-primary",
+  },
+  {
+    id: "aarav",
+    name: "Aarav Mehta",
+    className: "Class XI-A",
+    initials: "AM",
+    bio: "CAD, 3D design and anything that can be printed.",
+    skills: ["CAD", "3D Design", "Fusion 360"],
+    interests: ["Design", "Manufacturing"],
+    availability: "Open to teams",
+    projects: ["Smart Hydroponics Rig"],
+    achievements: ["Design Sprint Winner"],
+    status: "Active",
+    accent: "from-chart-4 to-accent",
+  },
+  {
+    id: "ananya",
+    name: "Ananya Kapoor",
+    className: "Class XII-C",
+    initials: "AK",
+    bio: "Research, writing and turning ideas into clear stories.",
+    skills: ["Research", "Presentation", "Data Analysis"],
+    interests: ["Science", "Education"],
+    availability: "Busy",
+    projects: ["Air Quality Study"],
+    achievements: ["Science Fair — 1st"],
+    status: "Active",
+    accent: "from-chart-5 to-primary",
+  },
+  {
+    id: "ishaan",
+    name: "Ishaan Verma",
+    className: "Class IX-A",
+    initials: "IV",
+    bio: "Learning full-stack development one project at a time.",
+    skills: ["Web Development", "JavaScript", "UI/UX"],
+    interests: ["Technology", "Entrepreneurship"],
+    availability: "Available",
+    projects: ["Student Innovation Portal"],
+    achievements: ["Coding Club Lead"],
+    status: "Active",
+    accent: "from-accent to-chart-3",
+  },
+  {
+    id: "meher",
+    name: "Meher Gill",
+    className: "Class XI-B",
+    initials: "MG",
+    bio: "Sustainability nerd. Composting is underrated.",
+    skills: ["Sustainability", "Biology", "Research"],
+    interests: ["Sustainability", "Healthcare"],
+    availability: "Open to teams",
+    projects: ["Campus Compost Loop"],
+    achievements: ["Green School Award"],
+    status: "Active",
+    accent: "from-success to-accent",
+  },
+  {
+    id: "rehan",
+    name: "Rehan Qureshi",
+    className: "Class XII-A",
+    initials: "RQ",
+    bio: "ML models, datasets and too many browser tabs.",
+    skills: ["Python", "AI", "Data Analysis"],
+    interests: ["AI", "Research"],
+    availability: "Available",
+    projects: ["Attendance Vision"],
+    achievements: ["AI Bootcamp Certified"],
+    status: "Active",
+    accent: "from-primary to-chart-5",
+  },
+  {
+    id: "tanvi",
+    name: "Tanvi Rao",
+    className: "Class IX-C",
+    initials: "TR",
+    bio: "Illustrator turned interface designer.",
+    skills: ["UI/UX", "Illustration", "Figma"],
+    interests: ["Design", "Technology"],
+    availability: "Open to teams",
+    projects: ["Aavishkar Design System"],
+    achievements: ["Poster Design — 1st"],
+    status: "Active",
+    accent: "from-chart-5 to-accent",
+  },
+  {
+    id: "kabir",
+    name: "Kabir Nanda",
+    className: "Class X-A",
+    initials: "KN",
+    bio: "Drones, sensors, soldering iron always warm.",
+    skills: ["Electronics", "Arduino", "Robotics"],
+    interests: ["Robotics", "Aerospace"],
+    availability: "Busy",
+    projects: ["Survey Drone"],
+    achievements: ["ATL Maker Fest"],
+    status: "Active",
+    accent: "from-chart-3 to-primary",
+  },
+  {
+    id: "diya",
+    name: "Diya Sethi",
+    className: "Class XI-C",
+    initials: "DS",
+    bio: "Health tech curious. Wants to build for clinics.",
+    skills: ["Biology", "Research", "Python"],
+    interests: ["Healthcare", "AI"],
+    availability: "Available",
+    projects: ["Vitals Logger"],
+    achievements: ["MedTech Workshop"],
+    status: "Active",
+    accent: "from-success to-primary",
+  },
+];
+
+export const allSkills = Array.from(new Set(students.flatMap((s) => s.skills))).sort();
+export const allInterests = Array.from(new Set(students.flatMap((s) => s.interests))).sort();
+export const allClasses = ["Class IX", "Class X", "Class XI", "Class XII"];
+
+export const ideaCategories = [
+  "AI",
+  "Robotics",
+  "Sustainability",
+  "Healthcare",
+  "Education",
+  "Technology",
+  "Entrepreneurship",
+];
+
+export const seedIdeas: Idea[] = [
+  {
+    id: "smart-waste-sorter",
+    title: "Smart Waste Sorter",
+    category: "Sustainability",
+    problem: "Mixed waste makes recycling difficult at school.",
+    solution: "An AI-assisted system that identifies and sorts waste.",
+    why: "The school generates several bins of mixed waste daily. Sorting at the source makes recycling actually work and gives students a live dataset to learn from.",
+    lookingFor: ["Python", "Electronics", "Robotics"],
+    technologies: ["TensorFlow Lite", "Raspberry Pi", "Servo motors"],
+    creatorId: "sanatvir",
+    supports: 48,
+    collaborators: 4,
+    interested: ["shaurya", "aarav", "meher"],
+    comments: [
+      {
+        id: "c1",
+        authorId: "shaurya",
+        text: "I can handle the electronics and the sorting arm.",
+        time: "2h ago",
+      },
+      {
+        id: "c2",
+        authorId: "meher",
+        text: "Happy to run the waste audit so we know what classes to train on.",
+        time: "1h ago",
+      },
+    ],
+  },
+  {
+    id: "study-buddy-matcher",
+    title: "Study Buddy Matcher",
+    category: "Education",
+    problem: "Students struggle to find peers studying the same topics.",
+    solution: "A matcher that pairs students by subject, schedule and study style.",
+    why: "Peer learning is the cheapest, fastest support system a school already owns — it just needs coordination.",
+    lookingFor: ["Web Development", "UI/UX"],
+    technologies: ["React", "Local storage"],
+    creatorId: "ishaan",
+    supports: 31,
+    collaborators: 2,
+    interested: ["tanvi", "ananya"],
+    comments: [
+      { id: "c1", authorId: "tanvi", text: "I'd love to design the onboarding.", time: "5h ago" },
+    ],
+  },
+  {
+    id: "campus-air-map",
+    title: "Campus Air Quality Map",
+    category: "Healthcare",
+    problem: "Nobody knows which parts of campus have poor air quality.",
+    solution: "Low-cost sensor nodes feeding a live campus heat map.",
+    why: "Delhi air is a daily health factor. Data makes decisions like when to move PE indoors far less arbitrary.",
+    lookingFor: ["Electronics", "Data Analysis"],
+    technologies: ["ESP32", "PM2.5 sensor", "Charts"],
+    creatorId: "ananya",
+    supports: 39,
+    collaborators: 3,
+    interested: ["kabir", "diya"],
+    comments: [],
+  },
+  {
+    id: "robotic-arm-lab",
+    title: "Teaching Robotic Arm",
+    category: "Robotics",
+    problem: "Junior students rarely get hands-on robotics time.",
+    solution: "A 4-axis arm with a block-based control interface for Class VI–VIII.",
+    why: "Early exposure is what turns curiosity into a skill. One arm can rotate through every junior section.",
+    lookingFor: ["CAD", "Arduino", "UI/UX"],
+    technologies: ["Fusion 360", "Arduino", "Blockly"],
+    creatorId: "shaurya",
+    supports: 27,
+    collaborators: 2,
+    interested: ["aarav"],
+    comments: [],
+  },
+  {
+    id: "canteen-demand",
+    title: "Canteen Demand Predictor",
+    category: "Entrepreneurship",
+    problem: "The canteen over-prepares some items and runs out of others.",
+    solution: "A simple forecast model built on a week of sales logs.",
+    why: "Less food waste, shorter queues, and a genuinely useful intro to applied data science.",
+    lookingFor: ["Python", "Data Analysis"],
+    technologies: ["Pandas", "Recharts"],
+    creatorId: "rehan",
+    supports: 22,
+    collaborators: 1,
+    interested: ["diya"],
+    comments: [],
+  },
+  {
+    id: "lab-inventory",
+    title: "ATL Lab Inventory Tags",
+    category: "Technology",
+    problem: "Components go missing between projects in the ATL lab.",
+    solution: "QR-tagged bins with a checkout log students can scan.",
+    why: "The lab loses hours every term hunting for parts that were never signed out.",
+    lookingFor: ["Web Development", "Electronics"],
+    technologies: ["QR", "React"],
+    creatorId: "tanvi",
+    supports: 18,
+    collaborators: 2,
+    interested: ["ishaan"],
+    comments: [],
+  },
+];
+
+export const seedProjects: Project[] = [
+  {
+    id: "ai-waste-sorter",
+    title: "AI Waste Sorter",
+    description:
+      "A bin-top vision system that classifies waste into dry, wet and recyclable, then actuates a sorting flap. Built for the ATL lab and the main corridor bins.",
+    status: "Active",
+    progress: 67,
+    memberIds: ["sanatvir", "shaurya", "aarav", "meher"],
+    deadline: "28 August",
+    milestones: [
+      { label: "Problem validation", date: "12 July", done: true },
+      { label: "Hardware prototype", date: "20 August", done: false },
+      { label: "Model at 90% accuracy", date: "2 September", done: false },
+      { label: "Exhibition demo", date: "10 September", done: false },
+    ],
+    tasks: [
+      { id: "t1", title: "Research", done: true },
+      { id: "t2", title: "Problem Definition", done: true },
+      { id: "t3", title: "Hardware Prototype", done: false, inProgress: true },
+      { id: "t4", title: "AI Model", done: false, inProgress: true },
+      { id: "t5", title: "Testing", done: false },
+      { id: "t6", title: "Presentation", done: false },
+    ],
+    files: [
+      { name: "waste-dataset-v2.zip", size: "84 MB", by: "Rehan Qureshi", date: "12 Aug" },
+      { name: "sorter-chassis.f3d", size: "6.2 MB", by: "Aarav Mehta", date: "10 Aug" },
+      { name: "waste-audit.pdf", size: "1.1 MB", by: "Meher Gill", date: "4 Aug" },
+    ],
+    updates: [
+      {
+        authorId: "shaurya",
+        text: "Servo mount printed and fitted. Flap closes in 0.4s.",
+        time: "Yesterday",
+      },
+      {
+        authorId: "sanatvir",
+        text: "Model at 81% on the validation set — needs more wet-waste samples.",
+        time: "2 days ago",
+      },
+    ],
+    chat: [
+      { authorId: "shaurya", text: "Bringing the second servo tomorrow.", time: "09:12" },
+      { authorId: "sanatvir", text: "Perfect. I'll retrain overnight.", time: "09:20" },
+    ],
+    mine: true,
+  },
+  {
+    id: "student-productivity-assistant",
+    title: "Student Productivity Assistant",
+    description:
+      "A lightweight planner that turns the school timetable and submission dates into a daily focus list.",
+    status: "Active",
+    progress: 34,
+    memberIds: ["sanatvir", "ishaan", "tanvi"],
+    deadline: "4 September",
+    milestones: [
+      { label: "Interviews with 20 students", date: "1 August", done: true },
+      { label: "Clickable prototype", date: "22 August", done: false },
+      { label: "Pilot with Class X", date: "1 September", done: false },
+    ],
+    tasks: [
+      { id: "t1", title: "Student interviews", done: true },
+      { id: "t2", title: "Information architecture", done: true },
+      { id: "t3", title: "Design system", done: false, inProgress: true },
+      { id: "t4", title: "Timetable importer", done: false },
+      { id: "t5", title: "Pilot feedback round", done: false },
+    ],
+    files: [{ name: "interview-notes.md", size: "42 KB", by: "Ishaan Verma", date: "6 Aug" }],
+    updates: [
+      { authorId: "tanvi", text: "First pass of the planner screens is up.", time: "3 days ago" },
+    ],
+    chat: [{ authorId: "ishaan", text: "Timetable parsing is trickier than expected.", time: "16:40" }],
+    mine: true,
+  },
+  {
+    id: "campus-compost-loop",
+    title: "Campus Compost Loop",
+    description: "Turning canteen waste into compost for the school garden, measured end to end.",
+    status: "Planning",
+    progress: 12,
+    memberIds: ["meher", "diya"],
+    deadline: "20 September",
+    milestones: [{ label: "Waste baseline", date: "25 August", done: false }],
+    tasks: [
+      { id: "t1", title: "Waste baseline survey", done: false, inProgress: true },
+      { id: "t2", title: "Composter design", done: false },
+    ],
+    files: [],
+    updates: [],
+    chat: [],
+    mine: false,
+  },
+];
+
+export const communities: Community[] = [
+  {
+    id: "ai-ml",
+    name: "AI & Machine Learning",
+    members: 142,
+    description: "Model building, datasets, papers explained simply and weekend notebook jams.",
+    activity: ["Rehan shared a dataset cleaning notebook", "Weekly paper club — Thursday, 3 PM"],
+    accent: "from-primary to-accent",
+  },
+  {
+    id: "robotics",
+    name: "Robotics",
+    members: 98,
+    description: "Arduino, actuators, chassis design and the ATL competition team pipeline.",
+    activity: ["Shaurya posted the arm gripper v3 files", "Open lab hours added on Saturday"],
+    accent: "from-accent to-chart-3",
+  },
+  {
+    id: "coding",
+    name: "Coding",
+    members: 121,
+    description: "Web, Python and DSA practice with peer code reviews every fortnight.",
+    activity: ["Ishaan started a React study group", "12 new solutions posted this week"],
+    accent: "from-chart-3 to-primary",
+  },
+  {
+    id: "design",
+    name: "Design",
+    members: 76,
+    description: "Interface design, posters, typography and critique sessions.",
+    activity: ["Tanvi shared the Aavishkar type scale", "Critique night — Friday"],
+    accent: "from-chart-5 to-accent",
+  },
+  {
+    id: "entrepreneurship",
+    name: "Entrepreneurship",
+    members: 64,
+    description: "Turning school projects into products people would actually pay for.",
+    activity: ["Pitch practice sign-ups open", "Canteen demand case study posted"],
+    accent: "from-chart-4 to-primary",
+  },
+  {
+    id: "research",
+    name: "Research",
+    members: 53,
+    description: "Method, measurement and writing up findings that hold up to questions.",
+    activity: ["Ananya posted an air quality method note", "Citation workshop recording added"],
+    accent: "from-success to-accent",
+  },
+];
+
+export const opportunities: Opportunity[] = [
+  {
+    id: "atl-robotics-challenge",
+    title: "ATL Robotics Challenge",
+    type: "Competition",
+    deadline: "28 August",
+    description:
+      "Design and build an autonomous robot that completes a timed obstacle course. Teams of four, one mentor each.",
+    eligibility: "Class IX – XII, APSDK students only",
+    skills: ["Robotics", "Arduino", "CAD", "Python"],
+    organizer: "ATL • APSDK",
+  },
+  {
+    id: "school-innovation-exhibition",
+    title: "School Innovation Exhibition",
+    type: "Exhibition",
+    deadline: "4 September",
+    description:
+      "Showcase working project prototypes to parents, faculty and visiting schools. Stall and poster provided.",
+    eligibility: "Any student with a project at 50%+ completion",
+    skills: ["Presentation", "Prototyping"],
+    organizer: "APS Dhaula Kuan",
+  },
+  {
+    id: "ai-hackathon",
+    title: "AI Hackathon",
+    type: "Hackathon",
+    deadline: "12 September",
+    description:
+      "A 24-hour build sprint on a school-life problem statement released on the morning of the event.",
+    eligibility: "Class X – XII, teams of two or three",
+    skills: ["Python", "AI", "Web Development"],
+    organizer: "ATL • APSDK",
+  },
+  {
+    id: "cad-workshop",
+    title: "Parametric CAD Workshop",
+    type: "Workshop",
+    deadline: "22 August",
+    description: "Two-session intensive on parametric modelling and printable tolerances.",
+    eligibility: "Open to all classes, 24 seats",
+    skills: ["CAD", "3D Design"],
+    organizer: "ATL Lab",
+  },
+];
+
+export const seedConversations: Conversation[] = [
+  {
+    id: "shaurya",
+    withId: "shaurya",
+    unread: 2,
+    messages: [
+      { fromMe: true, text: "Want to join the waste sorter project?", time: "09:02" },
+      { fromMe: false, text: "Yeah, I can handle the electronics side.", time: "09:05" },
+      { fromMe: false, text: "Do we have the servos already?", time: "09:06" },
+    ],
+  },
+  {
+    id: "tanvi",
+    withId: "tanvi",
+    unread: 0,
+    messages: [
+      { fromMe: false, text: "Shared the planner screens in the project files.", time: "Yesterday" },
+      { fromMe: true, text: "Looks sharp. Let's review in the Friday critique.", time: "Yesterday" },
+    ],
+  },
+  {
+    id: "ananya",
+    withId: "ananya",
+    unread: 1,
+    messages: [
+      { fromMe: false, text: "Can you review my air quality method note?", time: "Mon" },
+    ],
+  },
+  {
+    id: "rehan",
+    withId: "rehan",
+    unread: 0,
+    messages: [
+      { fromMe: true, text: "Need more wet-waste images for the dataset.", time: "Sun" },
+      { fromMe: false, text: "I'll shoot 200 more in the canteen tomorrow.", time: "Sun" },
+    ],
+  },
+];
+
+export const seedNotifications: Notification[] = [
+  {
+    id: "n1",
+    kind: "connection",
+    text: "Shaurya accepted your connection request.",
+    time: "12 min ago",
+    read: false,
+  },
+  { id: "n2", kind: "project", text: "You were invited to AI Waste Sorter.", time: "1 h ago", read: false },
+  {
+    id: "n3",
+    kind: "opportunity",
+    text: "ATL Robotics Challenge closes in 3 days.",
+    time: "3 h ago",
+    read: false,
+  },
+  {
+    id: "n4",
+    kind: "recruitment",
+    text: "Your application to the ATL Robotics Competition Team is under review.",
+    time: "Yesterday",
+    read: true,
+  },
+  {
+    id: "n5",
+    kind: "community",
+    text: "AI & Machine Learning posted: paper club moves to Thursday 3 PM.",
+    time: "Yesterday",
+    read: true,
+  },
+  {
+    id: "n6",
+    kind: "connection",
+    text: "Tanvi Rao wants to connect with you.",
+    time: "2 days ago",
+    read: true,
+  },
+];
+
+// ---------- Admin fixtures ----------
+
+export const adminStats = [
+  { label: "Students", value: 482, delta: "+18 this term" },
+  { label: "Active Projects", value: 21, delta: "+4 this month" },
+  { label: "Open Recruitments", value: 4, delta: "2 closing soon" },
+  { label: "Pending Applications", value: 38, delta: "12 unreviewed" },
+  { label: "Communities", value: 14, delta: "+1 new" },
+  { label: "Opportunities", value: 7, delta: "3 open" },
+];
+
+export const engagementSeries = [
+  { month: "Mar", students: 210, projects: 8 },
+  { month: "Apr", students: 268, projects: 11 },
+  { month: "May", students: 305, projects: 12 },
+  { month: "Jun", students: 352, projects: 15 },
+  { month: "Jul", students: 421, projects: 18 },
+  { month: "Aug", students: 482, projects: 21 },
+];
+
+export const skillDistribution = [
+  { skill: "Coding", students: 168 },
+  { skill: "Robotics", students: 124 },
+  { skill: "Design", students: 96 },
+  { skill: "Research", students: 71 },
+  { skill: "Electronics", students: 88 },
+  { skill: "Business", students: 54 },
+];
+
+export const categorySplit = [
+  { name: "AI", value: 32 },
+  { name: "Robotics", value: 26 },
+  { name: "Sustainability", value: 18 },
+  { name: "Education", value: 14 },
+  { name: "Health", value: 10 },
+];
+
+export const seedRecruitments: Recruitment[] = [
+  {
+    id: "atl-robotics-team",
+    title: "ATL Robotics Competition Team",
+    status: "Applications Open",
+    skills: ["Robotics", "Python", "Electronics", "CAD"],
+    applications: 27,
+    closes: "26 August",
+    description: "Four students plus one reserve for the inter-school ATL Robotics Challenge.",
+  },
+  {
+    id: "innovation-exhibition-crew",
+    title: "Innovation Exhibition Crew",
+    status: "Shortlisting",
+    skills: ["Presentation", "Design", "Coordination"],
+    applications: 9,
+    closes: "30 August",
+    description: "Stall design, visitor flow and demo scripting for the September exhibition.",
+  },
+  {
+    id: "ai-study-cohort",
+    title: "AI Study Cohort — Batch 3",
+    status: "Applications Open",
+    skills: ["Python", "AI", "Data Analysis"],
+    applications: 14,
+    closes: "5 September",
+    description: "Twelve-week guided cohort with weekly notebook submissions.",
+  },
+  {
+    id: "lab-assistants",
+    title: "ATL Lab Student Assistants",
+    status: "Closed",
+    skills: ["Electronics", "Organisation"],
+    applications: 21,
+    closes: "1 August",
+    description: "Inventory, safety checks and open-lab supervision support.",
+  },
+];
+
+export const seedApplications: Application[] = [
+  {
+    id: "a1",
+    studentId: "shaurya",
+    recruitmentId: "atl-robotics-team",
+    submitted: "14 Aug",
+    note: "Built the sorting arm for the waste project; comfortable with servo control.",
+    stage: "New",
+  },
+  {
+    id: "a2",
+    studentId: "kabir",
+    recruitmentId: "atl-robotics-team",
+    submitted: "14 Aug",
+    note: "Drone build experience, strong on soldering and sensor wiring.",
+    stage: "New",
+  },
+  {
+    id: "a3",
+    studentId: "aarav",
+    recruitmentId: "atl-robotics-team",
+    submitted: "13 Aug",
+    note: "Can own chassis CAD and printing tolerances.",
+    stage: "Reviewed",
+  },
+  {
+    id: "a4",
+    studentId: "rehan",
+    recruitmentId: "ai-study-cohort",
+    submitted: "12 Aug",
+    note: "Completed an AI bootcamp; wants to go deeper on model evaluation.",
+    stage: "Shortlisted",
+  },
+  {
+    id: "a5",
+    studentId: "ananya",
+    recruitmentId: "innovation-exhibition-crew",
+    submitted: "11 Aug",
+    note: "Handled the science fair stall last year end to end.",
+    stage: "Reviewed",
+  },
+  {
+    id: "a6",
+    studentId: "diya",
+    recruitmentId: "ai-study-cohort",
+    submitted: "10 Aug",
+    note: "Interested in health datasets specifically.",
+    stage: "New",
+  },
+];
+
+export const adminEvents = [
+  { title: "ATL Robotics Challenge briefing", date: "21 August", place: "ATL Lab", seats: "48 / 60" },
+  { title: "Parametric CAD Workshop", date: "22 August", place: "Computer Lab 2", seats: "24 / 24" },
+  { title: "Innovation Exhibition setup", date: "3 September", place: "Main Hall", seats: "—" },
+  { title: "AI Hackathon", date: "12 September", place: "ATL Lab + Lab 2", seats: "36 / 48" },
+];
+
+export const adminActivity = [
+  { text: "Sanatvir Singh updated AI Waste Sorter to 67%", time: "18 min ago" },
+  { text: "27 applications received for ATL Robotics Team", time: "1 h ago" },
+  { text: "Tanvi Rao created the idea 'ATL Lab Inventory Tags'", time: "3 h ago" },
+  { text: "Robotics community crossed 98 members", time: "Yesterday" },
+  { text: "Air Quality Study marked as completed", time: "2 days ago" },
+];
+
+export const seedReports: Report[] = [
+  {
+    id: "r1",
+    target: "Comment on 'Study Buddy Matcher'",
+    kind: "Comment",
+    reason: "Off-topic promotion",
+    date: "14 Aug",
+    status: "Open",
+  },
+  {
+    id: "r2",
+    target: "Student account — Class IX",
+    kind: "User",
+    reason: "Repeated connection spam",
+    date: "13 Aug",
+    status: "Reviewing",
+  },
+  {
+    id: "r3",
+    target: "Idea — 'Free Notes Exchange'",
+    kind: "Idea",
+    reason: "Possible copyright issue",
+    date: "11 Aug",
+    status: "Open",
+  },
+  {
+    id: "r4",
+    target: "Comment on 'Canteen Demand Predictor'",
+    kind: "Comment",
+    reason: "Rude language",
+    date: "9 Aug",
+    status: "Restricted",
+  },
+];
+
+export const assistantRecommendations: { studentId: string; reason: string }[] = [
+  {
+    studentId: "shaurya",
+    reason: "Strongest hardware profile in Class X — servo control and sorting mechanisms already shipped.",
+  },
+  {
+    studentId: "sanatvir",
+    reason: "Owns the vision model on AI Waste Sorter; bridges the AI and product side of the team.",
+  },
+  {
+    studentId: "aarav",
+    reason: "CAD and printing tolerances, which the chassis milestone currently blocks on.",
+  },
+  {
+    studentId: "ananya",
+    reason: "Research and presentation depth for the exhibition and judging rounds.",
+  },
+];
