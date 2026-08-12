@@ -1,16 +1,19 @@
 import { Link } from "@tanstack/react-router";
-import { Award, MessageSquare, Rocket } from "lucide-react";
+import { Award, Compass, MessageSquare, Rocket } from "lucide-react";
 import { ProfilePictureUpload } from "@/components/ProfilePictureUpload";
 import { Avatar, Chip } from "@/components/ui-kit/primitives";
 import { Button } from "@/components/ui/button";
 import { useAppState } from "@/lib/app-state";
+import { communitiesForStudent } from "@/lib/catalog";
 import { type Student } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 export function StudentProfile({ student, embedded }: { student: Student; embedded?: boolean | undefined }) {
-  const { isConnected, toggleConnection, currentUser, updateProfilePicture } = useAppState();
+  const { isConnected, toggleConnection, currentUser, updateProfilePicture, communities, communityMembers } =
+    useAppState();
   const isMe = student.id === currentUser.id;
   const connected = isConnected(student.id);
+  const memberOf = communitiesForStudent(student.id, communityMembers, communities);
 
   return (
     <div className="space-y-6">
@@ -115,6 +118,23 @@ export function StudentProfile({ student, embedded }: { student: Student; embedd
           </ul>
         </div>
       </div>
+
+      {memberOf.length > 0 && (
+        <div className="surface p-6">
+          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <Compass className="h-4 w-4" /> Communities
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {memberOf.map((c) => (
+              <Button key={c.id} asChild variant="outline" size="sm">
+                <Link to="/app/communities/$id" params={{ id: c.id }}>
+                  {c.name}
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

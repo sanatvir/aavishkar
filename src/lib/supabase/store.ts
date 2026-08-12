@@ -12,6 +12,7 @@ import {
   seedRecruitments,
   seedReports,
   students as seedStudents,
+  seedCommunityMembers,
   type Community,
   type Conversation,
   type Notification,
@@ -111,7 +112,12 @@ export type AppDataSnapshot = {
   studentSettings: StudentSettings;
   platformSettings: PlatformSettings;
   discoverHiddenIds: string[];
+  communityMembers: Record<string, string[]>;
 };
+
+const seedCommunityExtras = new Map(
+  seedCommunities.map((c) => [c.id, { sessions: c.sessions, resources: c.resources }]),
+);
 
 const pairKey = (a: string, b: string) => (a < b ? [a, b] : [b, a]);
 
@@ -405,10 +411,9 @@ export async function ensureSeeded() {
     })),
   );
   await supabase.from("community_members").insert(
-    ["ai-ml", "robotics", "coding"].map((community_id) => ({
-      community_id,
-      student_id: demoId,
-    })),
+    Object.entries(seedCommunityMembers).flatMap(([community_id, ids]) =>
+      ids.map((student_id) => ({ community_id, student_id })),
+    ),
   );
   await supabase.from("idea_supporters").insert({ idea_id: "campus-air-map", student_id: demoId });
 
@@ -536,8 +541,12 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
   }
 
   const communityMemberCounts = new Map<string, number>();
+  const communityMembersMap: Record<string, string[]> = {};
   for (const m of communityMembersAllRes.data ?? []) {
     communityMemberCounts.set(m.community_id, (communityMemberCounts.get(m.community_id) ?? 0) + 1);
+    const list = communityMembersMap[m.community_id] ?? [];
+    list.push(m.student_id);
+    communityMembersMap[m.community_id] = list;
   }
 
   const ideas: Idea[] = (ideasRes.data ?? []).map((row) => ({
@@ -567,7 +576,7 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
       status: row.status,
       progress: row.progress,
       memberIds: row.member_ids ?? [],
-      deadline: row.deadline,
+      deadline: row.deadline ?? "",
       milestones: row.milestones ?? [],
       tasks: row.tasks ?? [],
       files: row.files ?? [],
@@ -612,14 +621,19 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
 
   return {
     students: (studentsRes.data ?? []).map(mapStudent),
-    communities: (communitiesRes.data ?? []).map((c) => ({
-      id: c.id,
-      name: c.name,
-      members: communityMemberCounts.get(c.id) ?? c.members,
-      description: c.description,
-      activity: c.activity ?? [],
-      accent: c.accent,
-    })),
+    communities: (communitiesRes.data ?? []).map((c) => {
+      const extras = seedCommunityExtras.get(c.id);
+      return {
+        id: c.id,
+        name: c.name,
+        members: communityMemberCounts.get(c.id) ?? c.members,
+        description: c.description,
+        activity: c.activity ?? [],
+        accent: c.accent,
+        sessions: extras?.sessions ?? [],
+        resources: extras?.resources ?? [],
+      };
+    }),
     opportunities: (opportunitiesRes.data ?? []) as Opportunity[],
     connections: (connectionsRes.data ?? []).map((c) => c.connected_id),
     joinedCommunities: (communityMembersRes.data ?? []).map((c) => c.community_id),
@@ -654,6 +668,7 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
       ? mapPlatformSettings(platformSettingsRes.data)
       : defaultPlatformSettings(),
     discoverHiddenIds,
+    communityMembers: communityMembersMap,
   };
 }
 
@@ -965,6 +980,23 @@ export async function insertRecruitment(recruitment: Recruitment) {
     closes: recruitment.closes,
     description: recruitment.description,
   });
+}
+
+export async function insertCommunity(community: Community) {
+  if (!isSupabaseConfigured) return;
+  await supabase.from("communities").insert({
+    id: community.id,
+    name: community.name,
+    members: community.members,
+    description: community.description,
+    activity: community.activity,
+    accent: community.accent,
+  });
+}
+
+export async function deleteCommunity(id: string) {
+  if (!isSupabaseConfigured) return;
+  await supabase.from("communities").delete().eq("id", id);
 }
 
 export async function insertOpportunity(opportunity: Opportunity) {

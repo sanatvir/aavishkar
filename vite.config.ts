@@ -15,6 +15,7 @@ export default defineConfig({
     viteReact(),
     nitro({
       preset: process.env.VERCEL ? "vercel" : undefined,
+      serverDir: "server",
     }),
   ],
   resolve: {

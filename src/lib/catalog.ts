@@ -1,4 +1,23 @@
-import type { Idea, Student } from "./types";
+import type { Community, Idea, Student } from "./types";
+
+export function communitiesForStudent(
+  studentId: string,
+  communityMembers: Record<string, string[]>,
+  communities: Community[],
+): Community[] {
+  return communities.filter((c) => (communityMembers[c.id] ?? []).includes(studentId));
+}
+
+/** Keep community.member counts aligned with the live member roster (not stale seed totals). */
+export function communitiesWithLiveMemberCounts(
+  communities: Community[],
+  communityMembers: Record<string, string[]>,
+): Community[] {
+  return communities.map((c) => ({
+    ...c,
+    members: (communityMembers[c.id] ?? []).length,
+  }));
+}
 
 export function deriveSkills(students: Student[], fallback: string[] = []): string[] {
   const fromDb = Array.from(new Set(students.flatMap((s) => s.skills))).sort();

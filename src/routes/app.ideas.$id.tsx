@@ -202,14 +202,14 @@ function IdeaDetail() {
                 const s = findStudent(sid);
                 if (!s) return null;
                 return (
-                  <li key={sid}>
+                  <li key={sid} className="rounded-lg border border-border p-3">
                     <Link
                       to="/app/people/$id"
                       params={{ id: sid }}
-                      className="flex items-center gap-3 rounded-lg p-1 transition-colors hover:bg-secondary"
+                      className="flex items-center gap-3 transition-colors hover:opacity-90"
                     >
-                      <Avatar initials={s.initials} accent={s.accent} size="sm" />
-                      <div className="min-w-0">
+                      <Avatar initials={s.initials} accent={s.accent} size="sm" src={s.avatarUrl} />
+                      <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{s.name}</p>
                         <p className="truncate text-xs text-muted-foreground">{s.skills.slice(0, 2).join(" · ")}</p>
                       </div>

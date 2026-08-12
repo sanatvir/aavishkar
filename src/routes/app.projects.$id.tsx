@@ -20,7 +20,8 @@ export const Route = createFileRoute("/app/projects/$id")({
 
 function Workspace() {
   const { id } = Route.useParams();
-  const { projects, toggleTask, sendProjectChat, findStudent, currentUser, addProjectFile } = useAppState();
+  const { projects, toggleTask, sendProjectChat, findStudent, currentUser, addProjectFile, isConnected, toggleConnection } =
+    useAppState();
   const [message, setMessage] = useState("");
 
   const project = projects.find((p) => p.id === id);
@@ -207,19 +208,36 @@ function Workspace() {
           {project.memberIds.map((m) => {
             const s = findStudent(m);
             if (!s) return null;
+            const connected = isConnected(m);
+            const isMe = m === currentUser.id;
             return (
-              <Link
-                key={m}
-                to="/app/people/$id"
-                params={{ id: m }}
-                className="surface lift flex items-center gap-4 p-5"
-              >
-                <Avatar initials={s.initials} accent={s.accent} />
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{s.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{s.skills.join(" · ")}</p>
-                </div>
-              </Link>
+              <div key={m} className="surface lift flex flex-col gap-4 p-5">
+                <Link to="/app/people/$id" params={{ id: m }} className="flex items-center gap-4">
+                  <Avatar initials={s.initials} accent={s.accent} src={s.avatarUrl} />
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{s.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{s.className}</p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">{s.skills.slice(0, 3).join(" · ")}</p>
+                  </div>
+                </Link>
+                {!isMe && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={connected ? "secondary" : "default"}
+                      className="flex-1"
+                      onClick={() => toggleConnection(m)}
+                    >
+                      {connected ? "Connected" : "Connect"}
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="flex-1">
+                      <Link to="/app/people/$id" params={{ id: m }}>
+                        View profile
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </div>
             );
           })}
         </TabsContent>

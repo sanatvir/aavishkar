@@ -52,6 +52,42 @@ export type Project = {
   mine: boolean;
 };
 
+export type NewCommunity = {
+  name: string;
+  description: string;
+  sessionTitle: string;
+  sessionWhen: string;
+  sessionPlace: string;
+};
+
+export type CommunityJoinApplication = {
+  id: string;
+  studentId: string;
+  communityId: string;
+  submitted: string;
+  note: string;
+  status: "Pending" | "Accepted" | "Rejected";
+};
+
+export type CommunitySession = {
+  title: string;
+  when: string;
+  place: string;
+};
+
+export type CommunityResource = {
+  label: string;
+  note: string;
+};
+
+export type CommunityPost = {
+  id: string;
+  communityId: string;
+  authorId: string;
+  text: string;
+  time: string;
+};
+
 export type Community = {
   id: string;
   name: string;
@@ -59,6 +95,8 @@ export type Community = {
   description: string;
   activity: string[];
   accent: string;
+  sessions: CommunitySession[];
+  resources: CommunityResource[];
 };
 
 export type Opportunity = {

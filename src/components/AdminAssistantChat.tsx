@@ -23,14 +23,14 @@ import {
   storeMessages,
   type AssistantMessage,
 } from "@/lib/admin-assistant-context";
-import { chatWithAdminAssistant } from "@/lib/admin-assistant";
+import { chatWithAdminAssistantSafe } from "@/lib/admin-assistant";
 import { useAppState } from "@/lib/app-state";
+import { WELCOME_MESSAGE } from "@/lib/admin-assistant-voice";
 import { cn } from "@/lib/utils";
 
 const WELCOME: AssistantMessage = {
   role: "assistant",
-  content:
-    "Hello! I'm your **AAVISHKAR admin assistant** — chat with me like any AI helper.\n\nAsk about students, projects, recruitment, or say **hello** to get started. I use your live platform data when you need it.",
+  content: WELCOME_MESSAGE,
 };
 
 function InlineText({ text }: { text: string }) {
@@ -96,7 +96,7 @@ export function AdminAssistantChat() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const context = useMemo(
+  const buildLiveContext = useCallback(
     () =>
       buildPlatformContext({
         coordinatorName: app.platformSettings.coordinatorName,
@@ -111,9 +111,30 @@ export function AdminAssistantChat() {
         reports: app.reports,
         events: app.events,
         opportunities: app.opportunities,
+        communities: app.communities,
+        communityMembers: app.communityMembers,
+        communityJoinApplications: app.communityJoinApplications,
       }),
-    [app],
+    [
+      app.platformSettings.coordinatorName,
+      app.adminStats,
+      app.skillDistribution,
+      app.activity,
+      app.students,
+      app.pendingIdeas,
+      app.projects,
+      app.recruitments,
+      app.applications,
+      app.reports,
+      app.events,
+      app.opportunities,
+      app.communities,
+      app.communityMembers,
+      app.communityJoinApplications,
+    ],
   );
+
+  const context = useMemo(() => buildLiveContext(), [buildLiveContext]);
 
   useEffect(() => {
     storeMessages(messages);
@@ -137,10 +158,13 @@ export function AdminAssistantChat() {
       try {
         const payload = nextMessages
           .filter((m) => m.role === "user" || m.role === "assistant")
+          .slice(-24)
           .map((m) => ({ role: m.role, content: m.content }));
 
-        const result = await chatWithAdminAssistant({
-          data: { messages: payload, context },
+        const liveContext = buildLiveContext();
+
+        const result = await chatWithAdminAssistantSafe({
+          data: { messages: payload, context: liveContext },
         });
 
         setMessages((prev) => [
@@ -154,23 +178,12 @@ export function AdminAssistantChat() {
             errorKind: result.errorKind,
           },
         ]);
-      } catch {
-        toast.error("Assistant request failed. Check your connection and try again.");
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content:
-              "Sorry — I couldn't reach the server. Confirm `GROQ_API_KEY` is set and redeploy if you're on Vercel.",
-            source: "offline",
-          },
-        ]);
       } finally {
         setBusy(false);
         textareaRef.current?.focus();
       }
     },
-    [busy, context, messages],
+    [busy, buildLiveContext, messages],
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -261,17 +274,16 @@ export function AdminAssistantChat() {
                     {!isUser && (
                       <div className="flex flex-wrap items-center gap-2">
                         {msg.source === "groq" && <Chip tone="accent">Groq</Chip>}
-                        {msg.source === "offline" && msg.errorKind === "rate_limit" && (
+                        {msg.source === "openai" && <Chip tone="accent">OpenAI</Chip>}
+                        {msg.source === "nvidia" && <Chip tone="accent">NVIDIA</Chip>}
+                        {msg.errorKind === "rate_limit" && (
                           <Chip tone="warning">Rate limit</Chip>
                         )}
-                        {msg.source === "offline" && msg.errorKind === "auth" && (
+                        {msg.errorKind === "auth" && (
                           <Chip tone="danger">Invalid API key</Chip>
                         )}
-                        {msg.source === "offline" && !msg.errorKind && (
-                          <Chip className="text-muted-foreground">Offline fallback</Chip>
-                        )}
-                        {msg.source === "offline" && msg.errorKind && msg.errorKind !== "quota" && msg.errorKind !== "auth" && (
-                          <Chip className="text-muted-foreground">Offline fallback</Chip>
+                        {msg.errorKind === "network" && (
+                          <Chip tone="warning">Unavailable</Chip>
                         )}
                         <Button
                           variant="ghost"
@@ -381,8 +393,7 @@ export function AdminAssistantChat() {
               </Button>
             </div>
             <p className="text-center text-[0.65rem] text-muted-foreground">
-              Uses live roster and dashboard data · Set <code className="text-[0.65rem]">GROQ_API_KEY</code> on the
-              server · Model: <code className="text-[0.65rem]">llama-3.1-8b-instant</code> · Shift+Enter for new line
+              Live app data on every request · Groq → OpenAI → NVIDIA failover · Shift+Enter for new line
             </p>
           </div>
         </div>

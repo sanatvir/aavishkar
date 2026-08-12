@@ -1,7 +1,7 @@
 // Seed fixtures for local demo and first-time DB seed (when VITE_ENABLE_DEMO_SEED=true).
 
 export type * from "./types";
-import type { Application, Community, Conversation, Idea, Notification, Opportunity, Project, Recruitment, Report, Student } from "./types";
+import type { Application, Community, CommunityJoinApplication, Conversation, Idea, Notification, Opportunity, Project, Recruitment, Report, Student, CommunityPost } from "./types";
 
 export const currentUser: Student = {
   id: "sanatvir",
@@ -369,50 +369,195 @@ export const communities: Community[] = [
   {
     id: "ai-ml",
     name: "AI & Machine Learning",
-    members: 142,
+    members: 5,
     description: "Model building, datasets, papers explained simply and weekend notebook jams.",
     activity: ["Rehan shared a dataset cleaning notebook", "Weekly paper club — Thursday, 3 PM"],
     accent: "from-primary to-accent",
+    sessions: [
+      { title: "Paper club", when: "Every Thursday · 3 PM", place: "ATL Lab" },
+      { title: "Notebook jam", when: "Saturday · 10 AM", place: "Computer Lab 2" },
+    ],
+    resources: [
+      { label: "Kaggle Learn — Intro to ML", note: "Starter path for new members" },
+      { label: "School GPU notebook server", note: "Ask ATL coordinator for access" },
+    ],
   },
   {
     id: "robotics",
     name: "Robotics",
-    members: 98,
+    members: 4,
     description: "Arduino, actuators, chassis design and the ATL competition team pipeline.",
     activity: ["Shaurya posted the arm gripper v3 files", "Open lab hours added on Saturday"],
     accent: "from-accent to-chart-3",
+    sessions: [
+      { title: "Open lab hours", when: "Saturday · 2–5 PM", place: "ATL Makerspace" },
+      { title: "Competition team sync", when: "Wednesday · 4 PM", place: "Robotics bay" },
+    ],
+    resources: [
+      { label: "Arduino starter kit inventory", note: "Check out parts from ATL desk" },
+      { label: "Chassis design templates", note: "Fusion 360 files shared in community feed" },
+    ],
   },
   {
     id: "coding",
     name: "Coding",
-    members: 121,
+    members: 4,
     description: "Web, Python and DSA practice with peer code reviews every fortnight.",
     activity: ["Ishaan started a React study group", "12 new solutions posted this week"],
     accent: "from-chart-3 to-primary",
+    sessions: [
+      { title: "Peer code review", when: "Alternate Fridays · 3:30 PM", place: "Computer Lab 1" },
+      { title: "React study group", when: "Tuesday · 4 PM", place: "Library mezzanine" },
+    ],
+    resources: [
+      { label: "APSDK DSA problem set", note: "Curated by senior students" },
+      { label: "Project starter templates", note: "Vite + React boilerplate" },
+    ],
   },
   {
     id: "design",
     name: "Design",
-    members: 76,
+    members: 3,
     description: "Interface design, posters, typography and critique sessions.",
     activity: ["Tanvi shared the Aavishkar type scale", "Critique night — Friday"],
     accent: "from-chart-5 to-accent",
+    sessions: [
+      { title: "Critique night", when: "Friday · 4 PM", place: "Art room" },
+      { title: "Figma basics workshop", when: "First Monday monthly · 3 PM", place: "Computer Lab 2" },
+    ],
+    resources: [
+      { label: "Aavishkar design tokens", note: "Colours, type and spacing reference" },
+      { label: "Poster size guide", note: "For exhibitions and ATL events" },
+    ],
   },
   {
     id: "entrepreneurship",
     name: "Entrepreneurship",
-    members: 64,
+    members: 4,
     description: "Turning school projects into products people would actually pay for.",
     activity: ["Pitch practice sign-ups open", "Canteen demand case study posted"],
     accent: "from-chart-4 to-primary",
+    sessions: [
+      { title: "Pitch practice", when: "Thursday · 5 PM", place: "Seminar hall" },
+      { title: "Customer discovery clinic", when: "Monthly · last Saturday", place: "ATL conference room" },
+    ],
+    resources: [
+      { label: "Lean canvas template", note: "One-page business model" },
+      { label: "Past pitch deck examples", note: "School exhibition winners" },
+    ],
   },
   {
     id: "research",
     name: "Research",
-    members: 53,
+    members: 4,
     description: "Method, measurement and writing up findings that hold up to questions.",
     activity: ["Ananya posted an air quality method note", "Citation workshop recording added"],
     accent: "from-success to-accent",
+    sessions: [
+      { title: "Methods clinic", when: "Wednesday · 3 PM", place: "Science lab" },
+      { title: "Citation workshop", when: "Once a term · announced in feed", place: "Library" },
+    ],
+    resources: [
+      { label: "Lab notebook template", note: "For reproducible experiments" },
+      { label: "APA / IEEE quick reference", note: "For reports and exhibitions" },
+    ],
+  },
+];
+
+export const seedCommunityPosts: CommunityPost[] = [
+  {
+    id: "cp-ai-1",
+    communityId: "ai-ml",
+    authorId: "coordinator",
+    text: "Weekly paper club this Thursday at 3 PM in the ATL Lab — intro to transformers, all levels welcome.",
+    time: "2h ago",
+  },
+  {
+    id: "cp-ai-2",
+    communityId: "ai-ml",
+    authorId: "coordinator",
+    text: "Notebook jam this Saturday 10 AM, Computer Lab 2. Bring a dataset or join a group.",
+    time: "Yesterday",
+  },
+  {
+    id: "cp-rob-1",
+    communityId: "robotics",
+    authorId: "coordinator",
+    text: "Open lab hours this Saturday 2–5 PM in the ATL Makerspace. Competition team sync Wednesday 4 PM.",
+    time: "4h ago",
+  },
+  {
+    id: "cp-code-1",
+    communityId: "coding",
+    authorId: "coordinator",
+    text: "Peer code review next Friday 3:30 PM — sign up with your GitHub repo link in replies.",
+    time: "1d ago",
+  },
+  {
+    id: "cp-design-1",
+    communityId: "design",
+    authorId: "coordinator",
+    text: "Critique night Friday 4 PM in the art room. Bring posters or UI mockups for feedback.",
+    time: "3h ago",
+  },
+  {
+    id: "cp-ent-1",
+    communityId: "entrepreneurship",
+    authorId: "coordinator",
+    text: "Pitch practice slots open for the innovation exhibition — coordinators will review decks Thursday 5 PM.",
+    time: "5h ago",
+  },
+  {
+    id: "cp-res-1",
+    communityId: "research",
+    authorId: "coordinator",
+    text: "Methods clinic Wednesday 3 PM in the science lab. Citation workshop recording added to Resources.",
+    time: "6h ago",
+  },
+];
+
+/** student ids per community — used for offline demo and first-time DB seed */
+export const seedCommunityMembers: Record<string, string[]> = {
+  "ai-ml": ["sanatvir", "rehan", "diya", "meher", "ishaan"],
+  robotics: ["shaurya", "kabir", "aarav", "sanatvir"],
+  coding: ["ishaan", "sanatvir", "tanvi", "rehan"],
+  design: ["tanvi", "aarav", "ishaan"],
+  entrepreneurship: ["ishaan", "sanatvir", "meher", "ananya"],
+  research: ["ananya", "meher", "rehan", "diya"],
+};
+
+export const seedCommunityJoinApplications: CommunityJoinApplication[] = [
+  {
+    id: "cja-1",
+    studentId: "diya",
+    communityId: "design",
+    submitted: "14 Aug",
+    note: "I do poster layouts for school events and want critique from the design community.",
+    status: "Pending",
+  },
+  {
+    id: "cja-2",
+    studentId: "kabir",
+    communityId: "ai-ml",
+    submitted: "13 Aug",
+    note: "Built a drone vision pipeline — keen to learn ML beyond basic CV.",
+    status: "Pending",
+  },
+  {
+    id: "cja-3",
+    studentId: "aarav",
+    communityId: "robotics",
+    submitted: "12 Aug",
+    note: "Strong on CAD; looking to collaborate on competition robots.",
+    status: "Pending",
+  },
+  {
+    id: "cja-4",
+    studentId: "meher",
+    communityId: "research",
+    submitted: "10 Aug",
+    note: "Ran a compost moisture study — want to share methods with researchers.",
+    status: "Rejected",
   },
 ];
 
@@ -678,7 +823,7 @@ export const adminActivity = [
   { text: "Sanatvir Singh updated AI Waste Sorter to 67%", time: "18 min ago" },
   { text: "27 applications received for ATL Robotics Team", time: "1 h ago" },
   { text: "Tanvi Rao created the idea 'ATL Lab Inventory Tags'", time: "3 h ago" },
-  { text: "Robotics community crossed 98 members", time: "Yesterday" },
+  { text: "Shaurya posted arm gripper v3 files in Robotics community", time: "Yesterday" },
   { text: "Air Quality Study marked as completed", time: "2 days ago" },
 ];
 

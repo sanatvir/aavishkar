@@ -19,6 +19,8 @@ import {
   adminActivity,
   communities as seedCommunities,
   opportunities as seedOpportunities,
+  seedCommunityPosts,
+  seedCommunityJoinApplications,
   seedApplications,
   seedConversations,
   seedIdeas,
@@ -26,6 +28,7 @@ import {
   seedProjects,
   seedRecruitments,
   seedReports,
+  seedCommunityMembers,
   students as seedStudents,
   type Application,
   type Community,
@@ -37,11 +40,13 @@ import {
   type Recruitment,
   type Report,
   type Student,
+  type CommunityPost,
+  type CommunityJoinApplication,
 } from "./mock-data";
-import { deriveClasses, deriveIdeaCategories, deriveInterests, deriveSkills } from "./catalog";
+import { communitiesWithLiveMemberCounts, deriveClasses, deriveIdeaCategories, deriveInterests, deriveSkills } from "./catalog";
 import { isSupabaseConfigured } from "./supabase/client";
 import { subscribeAppChanges } from "./realtime";
-import type { NewEvent, NewOpportunity, NewRecruitment, NewReport } from "./types";
+import type { NewEvent, NewOpportunity, NewRecruitment, NewReport, NewCommunity } from "./types";
 import {
   buildEventFromDraft,
   buildOpportunityFromDraft,
@@ -49,10 +54,12 @@ import {
   bumpConversationUnread,
   defaultStudentSettings,
   deleteEvent,
+  deleteCommunity,
   deleteNotification,
   deleteOpportunity,
   ensureSeeded,
   insertApplication,
+  insertCommunity,
   insertEvent,
   insertIdea,
   insertIdeaComment,
@@ -89,7 +96,7 @@ import {
   type PlatformSettings,
   type StudentSettings,
 } from "./supabase/store";
-import { getSessionUserId } from "./session";
+import { getSessionUserId, getSessionPortal, COORDINATOR_AUTHOR_ID } from "./session";
 type NewIdea = {
   title: string;
   category: string;
@@ -122,7 +129,17 @@ type AppState = {
   isConnected: (id: string) => boolean;
 
   joinedCommunities: string[];
-  toggleCommunity: (id: string, name: string) => void;
+  communityMembers: Record<string, string[]>;
+  getCommunityMemberIds: (communityId: string) => string[];
+  communityPosts: CommunityPost[];
+  communityJoinApplications: CommunityJoinApplication[];
+  postToCommunity: (communityId: string, text: string) => void;
+  getCommunityJoinStatus: (communityId: string) => "member" | "pending" | "rejected" | "none";
+  applyToCommunity: (communityId: string, note: string) => boolean;
+  leaveCommunity: (id: string, name: string) => void;
+  setCommunityJoinApplicationStatus: (id: string, status: "Accepted" | "Rejected") => void;
+  addCommunity: (draft: NewCommunity) => void;
+  removeCommunity: (id: string) => void;
 
   ideas: Idea[];
   supported: string[];
@@ -215,10 +232,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const [ready, setReady] = useState(!isSupabaseConfigured);
   const [students, setStudents] = useState<Student[]>(seedStudents);
-  const [communities, setCommunities] = useState<Community[]>(seedCommunities);
+  const [communities, setCommunities] = useState<Community[]>(() =>
+    communitiesWithLiveMemberCounts(seedCommunities, seedCommunityMembers),
+  );
   const [opportunities, setOpportunities] = useState<Opportunity[]>(seedOpportunities);
   const [connections, setConnections] = useState<string[]>(["shaurya", "tanvi", "rehan", "ananya"]);
   const [joinedCommunities, setJoinedCommunities] = useState<string[]>(["ai-ml", "robotics", "coding"]);
+  const [communityMembers, setCommunityMembers] = useState<Record<string, string[]>>(seedCommunityMembers);
+  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(seedCommunityPosts);
+  const [communityJoinApplications, setCommunityJoinApplications] = useState<CommunityJoinApplication[]>(
+    seedCommunityJoinApplications,
+  );
   const [ideas, setIdeas] = useState<Idea[]>(seedIdeas);
   const [supported, setSupported] = useState<string[]>(["campus-air-map"]);
   const [joinedIdeas, setJoinedIdeas] = useState<string[]>([]);
@@ -257,10 +281,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const applySnapshot = (data: NonNullable<Awaited<ReturnType<typeof loadAppData>>>) => {
     setStudents(data.students);
     setLiveStudents(data.students);
-    setCommunities(data.communities);
+    setCommunities(communitiesWithLiveMemberCounts(data.communities, data.communityMembers));
     setOpportunities(data.opportunities);
     setConnections(data.connections);
     setJoinedCommunities(data.joinedCommunities);
+    setCommunityMembers(data.communityMembers);
     setIdeas(data.ideas);
     setSupported(data.supported);
     setJoinedIdeas(data.joinedIdeas);
@@ -426,18 +451,178 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       },
 
       joinedCommunities,
-      toggleCommunity: (id, name) => {
-        setJoinedCommunities((prev) => {
-          const has = prev.includes(id);
-          toast[has ? "message" : "success"](has ? `Left ${name}` : `Joined ${name}`);
-          void syncCommunity(userId, id, !has);
+      communityMembers,
+      getCommunityMemberIds: (communityId) => communityMembers[communityId] ?? [],
+      communityPosts,
+      communityJoinApplications,
+      getCommunityJoinStatus: (communityId) => {
+        if (joinedCommunities.includes(communityId)) return "member";
+        const app = communityJoinApplications
+          .filter((a) => a.studentId === userId && a.communityId === communityId)
+          .sort((a, b) => b.id.localeCompare(a.id))[0];
+        if (!app) return "none";
+        if (app.status === "Pending") return "pending";
+        if (app.status === "Rejected") return "rejected";
+        return "none";
+      },
+      applyToCommunity: (communityId, note) => {
+        const community = communities.find((c) => c.id === communityId);
+        if (!community) return false;
+        if (joinedCommunities.includes(communityId)) {
+          toast.message("You're already in this community.");
+          return false;
+        }
+        if (
+          communityJoinApplications.some(
+            (a) => a.studentId === userId && a.communityId === communityId && a.status === "Pending",
+          )
+        ) {
+          toast.message("Your application is pending coordinator review.");
+          return false;
+        }
+        const app: CommunityJoinApplication = {
+          id: `cja-${Date.now()}`,
+          studentId: userId,
+          communityId,
+          submitted: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+          note: note.trim(),
+          status: "Pending",
+        };
+        setCommunityJoinApplications((prev) => [...prev, app]);
+        pushActivity(`${me.name} applied to join “${community.name}”`);
+        toast.success("Application submitted", {
+          description: "A coordinator will review your request.",
+        });
+        return true;
+      },
+      leaveCommunity: (id, name) => {
+        if (!joinedCommunities.includes(id)) return;
+        setJoinedCommunities((prev) => prev.filter((c) => c !== id));
+        void syncCommunity(userId, id, false);
+        setCommunities((cs) =>
+          cs.map((c) => (c.id === id ? { ...c, members: Math.max(0, c.members - 1) } : c)),
+        );
+        setCommunityMembers((members) => ({
+          ...members,
+          [id]: (members[id] ?? []).filter((sid) => sid !== userId),
+        }));
+        toast.message(`Left ${name}`);
+      },
+      setCommunityJoinApplicationStatus: (id, status) => {
+        if (getSessionPortal() !== "admin") {
+          toast.error("Only coordinators can review community applications.");
+          return;
+        }
+        const app = communityJoinApplications.find((a) => a.id === id);
+        if (!app || app.status !== "Pending") return;
+
+        setCommunityJoinApplications((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, status } : a)),
+        );
+
+        const student = students.find((s) => s.id === app.studentId);
+        const community = communities.find((c) => c.id === app.communityId);
+        const communityName = community?.name ?? "community";
+
+        if (status === "Accepted") {
+          setCommunityMembers((members) => {
+            const list = members[app.communityId] ?? [];
+            if (list.includes(app.studentId)) return members;
+            return { ...members, [app.communityId]: [...list, app.studentId] };
+          });
           setCommunities((cs) =>
             cs.map((c) =>
-              c.id === id ? { ...c, members: Math.max(0, c.members + (has ? -1 : 1)) } : c,
+              c.id === app.communityId ? { ...c, members: c.members + 1 } : c,
             ),
           );
-          return has ? prev.filter((c) => c !== id) : [...prev, id];
+          void syncCommunity(app.studentId, app.communityId, true);
+          if (app.studentId === userId) {
+            setJoinedCommunities((prev) =>
+              prev.includes(app.communityId) ? prev : [...prev, app.communityId],
+            );
+          }
+          notifyStudent(
+            app.studentId,
+            "community",
+            `You were accepted into “${communityName}”`,
+          );
+          pushActivity(`${student?.name ?? "Student"} joined “${communityName}”`);
+          toast.success(`Accepted ${student?.name ?? "student"} into ${communityName}`);
+        } else {
+          notifyStudent(
+            app.studentId,
+            "community",
+            `Your application to “${communityName}” was not accepted this time.`,
+          );
+          toast.message(`Application rejected for ${student?.name ?? "student"}`);
+        }
+      },
+      postToCommunity: (communityId, text) => {
+        if (getSessionPortal() !== "admin") {
+          toast.error("Only ATL coordinators can post to community feeds.");
+          return;
+        }
+        const communityName = communities.find((c) => c.id === communityId)?.name ?? "a community";
+        const coordinatorName = platformSettings.coordinatorName;
+        const post: CommunityPost = {
+          id: `cp-${Date.now()}`,
+          communityId,
+          authorId: COORDINATOR_AUTHOR_ID,
+          text: text.trim(),
+          time: "just now",
+        };
+        setCommunityPosts((prev) => [post, ...prev]);
+        setCommunities((prev) =>
+          prev.map((c) =>
+            c.id === communityId ? { ...c, activity: [text.trim(), ...c.activity].slice(0, 6) } : c,
+          ),
+        );
+        pushActivity(`${coordinatorName} posted in ${communityName}`);
+        toast.success("Posted to community feed");
+      },
+      addCommunity: (draft) => {
+        if (getSessionPortal() !== "admin") {
+          toast.error("Only ATL coordinators can create communities.");
+          return;
+        }
+        const id = uniqueSlug(
+          draft.name,
+          communities.map((c) => c.id),
+        );
+        const community: Community = {
+          id,
+          name: draft.name.trim(),
+          description: draft.description.trim(),
+          members: 0,
+          activity: [`Community created by ${platformSettings.coordinatorName}`],
+          accent: "from-primary to-accent",
+          sessions: draft.sessionTitle.trim()
+            ? [{ title: draft.sessionTitle.trim(), when: draft.sessionWhen.trim() || "TBA", place: draft.sessionPlace.trim() || "TBA" }]
+            : [],
+          resources: [],
+        };
+        setCommunities((prev) => [community, ...prev]);
+        setCommunityMembers((prev) => ({ ...prev, [id]: [] }));
+        void insertCommunity(community);
+        pushActivity(`New community created: “${community.name}”`);
+        toast.success("Community created");
+      },
+      removeCommunity: (id) => {
+        if (getSessionPortal() !== "admin") {
+          toast.error("Only ATL coordinators can remove communities.");
+          return;
+        }
+        const name = communities.find((c) => c.id === id)?.name ?? "Community";
+        setCommunities((prev) => prev.filter((c) => c.id !== id));
+        setCommunityMembers((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
         });
+        setCommunityPosts((prev) => prev.filter((p) => p.communityId !== id));
+        setJoinedCommunities((prev) => prev.filter((cid) => cid !== id));
+        void deleteCommunity(id);
+        toast.message(`${name} removed`);
       },
 
       ideas: publishedIdeas,
@@ -876,6 +1061,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     opportunities,
     connections,
     joinedCommunities,
+    communityMembers,
+    communityPosts,
+    communityJoinApplications,
     ideas,
     supported,
     joinedIdeas,

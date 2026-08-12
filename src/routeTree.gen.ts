@@ -35,6 +35,10 @@ import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppProjectsRouteImport } from './routes/app.projects'
 import { Route as AppRecruitmentRouteImport } from './routes/app.recruitment'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AdminCommunitiesIndexRouteImport } from './routes/admin.communities.index'
+import { Route as AdminCommunitiesIdRouteImport } from './routes/admin.communities.$id'
+import { Route as AppCommunitiesIndexRouteImport } from './routes/app.communities.index'
+import { Route as AppCommunitiesIdRouteImport } from './routes/app.communities.$id'
 import { Route as AppIdeasIndexRouteImport } from './routes/app.ideas.index'
 import { Route as AppIdeasIdRouteImport } from './routes/app.ideas.$id'
 import { Route as AppPeopleIndexRouteImport } from './routes/app.people.index'
@@ -172,6 +176,26 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminCommunitiesIndexRoute = AdminCommunitiesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCommunitiesRoute,
+} as any)
+const AdminCommunitiesIdRoute = AdminCommunitiesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminCommunitiesRoute,
+} as any)
+const AppCommunitiesIndexRoute = AppCommunitiesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppCommunitiesRoute,
+} as any)
+const AppCommunitiesIdRoute = AppCommunitiesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppCommunitiesRoute,
+} as any)
 const AppIdeasIndexRoute = AppIdeasIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -208,7 +232,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/admin/assistant': typeof AdminAssistantRoute
-  '/admin/communities': typeof AdminCommunitiesRoute
+  '/admin/communities': typeof AdminCommunitiesRouteWithChildren
   '/admin/events': typeof AdminEventsRoute
   '/admin/ideas': typeof AdminIdeasRoute
   '/admin/opportunities': typeof AdminOpportunitiesRoute
@@ -218,7 +242,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/talent': typeof AdminTalentRoute
-  '/app/communities': typeof AppCommunitiesRoute
+  '/app/communities': typeof AppCommunitiesRouteWithChildren
   '/app/ideas': typeof AppIdeasRouteWithChildren
   '/app/messages': typeof AppMessagesRoute
   '/app/notifications': typeof AppNotificationsRoute
@@ -230,9 +254,13 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AppSettingsRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/admin/communities/$id': typeof AdminCommunitiesIdRoute
+  '/app/communities/$id': typeof AppCommunitiesIdRoute
   '/app/ideas/$id': typeof AppIdeasIdRoute
   '/app/people/$id': typeof AppPeopleIdRoute
   '/app/projects/$id': typeof AppProjectsIdRoute
+  '/admin/communities/': typeof AdminCommunitiesIndexRoute
+  '/app/communities/': typeof AppCommunitiesIndexRoute
   '/app/ideas/': typeof AppIdeasIndexRoute
   '/app/people/': typeof AppPeopleIndexRoute
   '/app/projects/': typeof AppProjectsIndexRoute
@@ -240,7 +268,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/assistant': typeof AdminAssistantRoute
-  '/admin/communities': typeof AdminCommunitiesRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/ideas': typeof AdminIdeasRoute
   '/admin/opportunities': typeof AdminOpportunitiesRoute
@@ -250,7 +277,6 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/talent': typeof AdminTalentRoute
-  '/app/communities': typeof AppCommunitiesRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/opportunities': typeof AppOpportunitiesRoute
@@ -259,9 +285,13 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AppSettingsRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
+  '/admin/communities/$id': typeof AdminCommunitiesIdRoute
+  '/app/communities/$id': typeof AppCommunitiesIdRoute
   '/app/ideas/$id': typeof AppIdeasIdRoute
   '/app/people/$id': typeof AppPeopleIdRoute
   '/app/projects/$id': typeof AppProjectsIdRoute
+  '/admin/communities': typeof AdminCommunitiesIndexRoute
+  '/app/communities': typeof AppCommunitiesIndexRoute
   '/app/ideas': typeof AppIdeasIndexRoute
   '/app/people': typeof AppPeopleIndexRoute
   '/app/projects': typeof AppProjectsIndexRoute
@@ -272,7 +302,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/admin/assistant': typeof AdminAssistantRoute
-  '/admin/communities': typeof AdminCommunitiesRoute
+  '/admin/communities': typeof AdminCommunitiesRouteWithChildren
   '/admin/events': typeof AdminEventsRoute
   '/admin/ideas': typeof AdminIdeasRoute
   '/admin/opportunities': typeof AdminOpportunitiesRoute
@@ -282,7 +312,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/talent': typeof AdminTalentRoute
-  '/app/communities': typeof AppCommunitiesRoute
+  '/app/communities': typeof AppCommunitiesRouteWithChildren
   '/app/ideas': typeof AppIdeasRouteWithChildren
   '/app/messages': typeof AppMessagesRoute
   '/app/notifications': typeof AppNotificationsRoute
@@ -294,9 +324,13 @@ export interface FileRoutesById {
   '/app/settings': typeof AppSettingsRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/admin/communities/$id': typeof AdminCommunitiesIdRoute
+  '/app/communities/$id': typeof AppCommunitiesIdRoute
   '/app/ideas/$id': typeof AppIdeasIdRoute
   '/app/people/$id': typeof AppPeopleIdRoute
   '/app/projects/$id': typeof AppProjectsIdRoute
+  '/admin/communities/': typeof AdminCommunitiesIndexRoute
+  '/app/communities/': typeof AppCommunitiesIndexRoute
   '/app/ideas/': typeof AppIdeasIndexRoute
   '/app/people/': typeof AppPeopleIndexRoute
   '/app/projects/': typeof AppProjectsIndexRoute
@@ -330,9 +364,13 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/admin/'
     | '/app/'
+    | '/admin/communities/$id'
+    | '/app/communities/$id'
     | '/app/ideas/$id'
     | '/app/people/$id'
     | '/app/projects/$id'
+    | '/admin/communities/'
+    | '/app/communities/'
     | '/app/ideas/'
     | '/app/people/'
     | '/app/projects/'
@@ -340,7 +378,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin/assistant'
-    | '/admin/communities'
     | '/admin/events'
     | '/admin/ideas'
     | '/admin/opportunities'
@@ -350,7 +387,6 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/students'
     | '/admin/talent'
-    | '/app/communities'
     | '/app/messages'
     | '/app/notifications'
     | '/app/opportunities'
@@ -359,9 +395,13 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/admin'
     | '/app'
+    | '/admin/communities/$id'
+    | '/app/communities/$id'
     | '/app/ideas/$id'
     | '/app/people/$id'
     | '/app/projects/$id'
+    | '/admin/communities'
+    | '/app/communities'
     | '/app/ideas'
     | '/app/people'
     | '/app/projects'
@@ -393,9 +433,13 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/admin/'
     | '/app/'
+    | '/admin/communities/$id'
+    | '/app/communities/$id'
     | '/app/ideas/$id'
     | '/app/people/$id'
     | '/app/projects/$id'
+    | '/admin/communities/'
+    | '/app/communities/'
     | '/app/ideas/'
     | '/app/people/'
     | '/app/projects/'
@@ -591,6 +635,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/communities/': {
+      id: '/admin/communities/'
+      path: '/'
+      fullPath: '/admin/communities/'
+      preLoaderRoute: typeof AdminCommunitiesIndexRouteImport
+      parentRoute: typeof AdminCommunitiesRoute
+    }
+    '/admin/communities/$id': {
+      id: '/admin/communities/$id'
+      path: '/$id'
+      fullPath: '/admin/communities/$id'
+      preLoaderRoute: typeof AdminCommunitiesIdRouteImport
+      parentRoute: typeof AdminCommunitiesRoute
+    }
+    '/app/communities/': {
+      id: '/app/communities/'
+      path: '/'
+      fullPath: '/app/communities/'
+      preLoaderRoute: typeof AppCommunitiesIndexRouteImport
+      parentRoute: typeof AppCommunitiesRoute
+    }
+    '/app/communities/$id': {
+      id: '/app/communities/$id'
+      path: '/$id'
+      fullPath: '/app/communities/$id'
+      preLoaderRoute: typeof AppCommunitiesIdRouteImport
+      parentRoute: typeof AppCommunitiesRoute
+    }
     '/app/ideas/': {
       id: '/app/ideas/'
       path: '/'
@@ -636,9 +708,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminCommunitiesRouteChildren {
+  AdminCommunitiesIdRoute: typeof AdminCommunitiesIdRoute
+  AdminCommunitiesIndexRoute: typeof AdminCommunitiesIndexRoute
+}
+
+const AdminCommunitiesRouteChildren: AdminCommunitiesRouteChildren = {
+  AdminCommunitiesIdRoute: AdminCommunitiesIdRoute,
+  AdminCommunitiesIndexRoute: AdminCommunitiesIndexRoute,
+}
+
+const AdminCommunitiesRouteWithChildren =
+  AdminCommunitiesRoute._addFileChildren(AdminCommunitiesRouteChildren)
+
 interface AdminRouteChildren {
   AdminAssistantRoute: typeof AdminAssistantRoute
-  AdminCommunitiesRoute: typeof AdminCommunitiesRoute
+  AdminCommunitiesRoute: typeof AdminCommunitiesRouteWithChildren
   AdminEventsRoute: typeof AdminEventsRoute
   AdminIdeasRoute: typeof AdminIdeasRoute
   AdminOpportunitiesRoute: typeof AdminOpportunitiesRoute
@@ -653,7 +738,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAssistantRoute: AdminAssistantRoute,
-  AdminCommunitiesRoute: AdminCommunitiesRoute,
+  AdminCommunitiesRoute: AdminCommunitiesRouteWithChildren,
   AdminEventsRoute: AdminEventsRoute,
   AdminIdeasRoute: AdminIdeasRoute,
   AdminOpportunitiesRoute: AdminOpportunitiesRoute,
@@ -667,6 +752,20 @@ const AdminRouteChildren: AdminRouteChildren = {
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface AppCommunitiesRouteChildren {
+  AppCommunitiesIdRoute: typeof AppCommunitiesIdRoute
+  AppCommunitiesIndexRoute: typeof AppCommunitiesIndexRoute
+}
+
+const AppCommunitiesRouteChildren: AppCommunitiesRouteChildren = {
+  AppCommunitiesIdRoute: AppCommunitiesIdRoute,
+  AppCommunitiesIndexRoute: AppCommunitiesIndexRoute,
+}
+
+const AppCommunitiesRouteWithChildren = AppCommunitiesRoute._addFileChildren(
+  AppCommunitiesRouteChildren,
+)
 
 interface AppIdeasRouteChildren {
   AppIdeasIdRoute: typeof AppIdeasIdRoute
@@ -711,7 +810,7 @@ const AppProjectsRouteWithChildren = AppProjectsRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
-  AppCommunitiesRoute: typeof AppCommunitiesRoute
+  AppCommunitiesRoute: typeof AppCommunitiesRouteWithChildren
   AppIdeasRoute: typeof AppIdeasRouteWithChildren
   AppMessagesRoute: typeof AppMessagesRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
@@ -725,7 +824,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppCommunitiesRoute: AppCommunitiesRoute,
+  AppCommunitiesRoute: AppCommunitiesRouteWithChildren,
   AppIdeasRoute: AppIdeasRouteWithChildren,
   AppMessagesRoute: AppMessagesRoute,
   AppNotificationsRoute: AppNotificationsRoute,

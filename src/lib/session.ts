@@ -2,6 +2,8 @@ const SESSION_KEY = "aavishkar_user";
 const PORTAL_KEY = "aavishkar_portal";
 
 export const DEMO_STUDENT_ID = "sanatvir";
+/** Author id for coordinator posts in community feeds */
+export const COORDINATOR_AUTHOR_ID = "coordinator";
 
 export type Portal = "student" | "admin";
 
