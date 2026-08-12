@@ -32,6 +32,24 @@ New installs: run `schema.sql` then `002_live_data.sql`.
 
 Run **`supabase/003_features.sql`** after the steps above.
 
+## 2d. Profile picture columns
+
+Run **`supabase/004_avatars.sql`**.
+
+## 2e. Storage (avatars + project files)
+
+Run **`supabase/005_storage.sql`** in SQL Editor (creates buckets + upload/read policies in one go).
+
+Optional: create buckets via CLI instead (policies still need the SQL file):
+
+```powershell
+# Add SUPABASE_SERVICE_ROLE_KEY to .env (never VITE_ — server secret only)
+node scripts/setup-storage.mjs
+# Then still run supabase/005_storage.sql for policies (or run the full file once in SQL Editor)
+```
+
+Verify in **Storage**: buckets `avatars` and `project-files` appear. Test profile upload in **Settings → Profile**.
+
 ## 3. Seed data
 
 Demo seeding is **off by default**. For local demos with the 10 sample students, add to `.env`:
@@ -61,8 +79,10 @@ npm run dev
    |------|--------|
    | `VITE_SUPABASE_URL` | From Supabase → Settings → API → Project URL |
    | `VITE_SUPABASE_ANON_KEY` | From Supabase → Settings → API → anon public key |
+   | `GROQ_API_KEY` | From [console.groq.com/keys](https://console.groq.com/keys) — powers **Admin → AI Assistant** (server-only) |
+   | `GROQ_MODEL` | Optional — default `llama-3.1-8b-instant` (best free quota). Use `llama-3.3-70b-versatile` for smarter drafts |
 
-4. **Redeploy** after adding variables (`VITE_*` vars are baked in at build time — a redeploy is required).
+4. **Redeploy** after adding variables (`VITE_*` vars are baked in at build time — a redeploy is required). `GROQ_API_KEY` is read at runtime on the server.
 5. Optional local demo seed only: `VITE_ENABLE_DEMO_SEED=true` (do **not** use in production).
 
 If env vars are missing, the site loads in offline demo mode instead of crashing with a 500.

@@ -51,7 +51,7 @@ function AdminDashboard() {
         subtitle="Talent, projects and recruitment across APS Dhaula Kuan."
         action={
           <Button asChild className="gap-2">
-            <Link to="/admin/assistant">Open Talent Assistant</Link>
+            <Link to="/admin/assistant">Open AI Assistant</Link>
           </Button>
         }
       />

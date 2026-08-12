@@ -1,4 +1,4 @@
-import type { Student } from "./mock-data";
+import type { Student } from "./types";
 
 export type TeamRecommendation = { studentId: string; reason: string };
 
