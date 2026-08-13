@@ -27,6 +27,17 @@ export function getSessionPortal(): Portal {
   return portal === "admin" ? "admin" : "student";
 }
 
+export function hasAdminSession(): boolean {
+  return getSessionPortal() === "admin";
+}
+
+/** Open admin access — sets portal when deep-linking to /admin without using the landing button. */
+export function ensureCoordinatorSession(): void {
+  if (typeof window === "undefined") return;
+  if (getSessionPortal() === "admin") return;
+  setCoordinatorSession();
+}
+
 export function setStudentSession(userId: string = DEMO_STUDENT_ID) {
   localStorage.setItem(SESSION_KEY, userId);
   localStorage.setItem(PORTAL_KEY, "student");

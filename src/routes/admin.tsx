@@ -1,4 +1,5 @@
 import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { ensureCoordinatorSession } from "@/lib/session";
 import {
   Bot,
   CalendarDays,
@@ -18,6 +19,9 @@ import { INSTITUTION_NAME } from "@/lib/brand";
 import { useAppState } from "@/lib/app-state";
 
 export const Route = createFileRoute("/admin")({
+  beforeLoad: () => {
+    ensureCoordinatorSession();
+  },
   component: AdminLayout,
 });
 

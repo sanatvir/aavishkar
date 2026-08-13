@@ -36,12 +36,17 @@ function JoinPage() {
   const progress = ((stepIndex + 1) / ONBOARDING_STEPS.length) * 100;
 
   useEffect(() => {
-    if (getSessionPortal() !== "student") {
-      navigate({ to: "/" });
+    const portal = getSessionPortal();
+    if (portal === "admin") {
+      navigate({ to: "/admin", replace: true });
+      return;
+    }
+    if (portal !== "student") {
+      navigate({ to: "/", replace: true });
       return;
     }
     if (ready && !needsOnboarding) {
-      navigate({ to: "/app" });
+      navigate({ to: "/app", replace: true });
     }
   }, [ready, needsOnboarding, navigate]);
 

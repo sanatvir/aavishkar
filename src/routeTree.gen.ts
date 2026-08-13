@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdminsRouteImport } from './routes/admins'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -25,6 +26,7 @@ import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminTalentRouteImport } from './routes/admin.talent'
+import { Route as AdminsSplatRouteImport } from './routes/admins/$'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppCommunitiesRouteImport } from './routes/app.communities'
 import { Route as AppIdeasRouteImport } from './routes/app.ideas'
@@ -36,6 +38,7 @@ import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppProjectsRouteImport } from './routes/app.projects'
 import { Route as AppRecruitmentRouteImport } from './routes/app.recruitment'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminCommunitiesIndexRouteImport } from './routes/admin.communities.index'
 import { Route as AdminCommunitiesIdRouteImport } from './routes/admin.communities.$id'
 import { Route as AppCommunitiesIndexRouteImport } from './routes/app.communities.index'
@@ -55,6 +58,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminsRoute = AdminsRouteImport.update({
+  id: '/admins',
+  path: '/admins',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -127,6 +135,11 @@ const AdminTalentRoute = AdminTalentRouteImport.update({
   path: '/talent',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminsSplatRoute = AdminsSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => AdminsRoute,
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -182,6 +195,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCommunitiesIndexRoute = AdminCommunitiesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -236,6 +254,7 @@ const AppProjectsIdRoute = AppProjectsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admins': typeof AdminsRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/join': typeof JoinRoute
   '/admin/assistant': typeof AdminAssistantRoute
@@ -249,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/talent': typeof AdminTalentRoute
+  '/admins/$': typeof AdminsSplatRoute
   '/app/communities': typeof AppCommunitiesRouteWithChildren
   '/app/ideas': typeof AppIdeasRouteWithChildren
   '/app/messages': typeof AppMessagesRoute
@@ -259,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/app/projects': typeof AppProjectsRouteWithChildren
   '/app/recruitment': typeof AppRecruitmentRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/communities/$id': typeof AdminCommunitiesIdRoute
@@ -274,6 +295,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admins': typeof AdminsRouteWithChildren
   '/join': typeof JoinRoute
   '/admin/assistant': typeof AdminAssistantRoute
   '/admin/events': typeof AdminEventsRoute
@@ -285,12 +307,14 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/talent': typeof AdminTalentRoute
+  '/admins/$': typeof AdminsSplatRoute
   '/app/messages': typeof AppMessagesRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/opportunities': typeof AppOpportunitiesRoute
   '/app/profile': typeof AppProfileRoute
   '/app/recruitment': typeof AppRecruitmentRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/admin/communities/$id': typeof AdminCommunitiesIdRoute
@@ -308,6 +332,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admins': typeof AdminsRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/join': typeof JoinRoute
   '/admin/assistant': typeof AdminAssistantRoute
@@ -321,6 +346,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/talent': typeof AdminTalentRoute
+  '/admins/$': typeof AdminsSplatRoute
   '/app/communities': typeof AppCommunitiesRouteWithChildren
   '/app/ideas': typeof AppIdeasRouteWithChildren
   '/app/messages': typeof AppMessagesRoute
@@ -331,6 +357,7 @@ export interface FileRoutesById {
   '/app/projects': typeof AppProjectsRouteWithChildren
   '/app/recruitment': typeof AppRecruitmentRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/communities/$id': typeof AdminCommunitiesIdRoute
@@ -349,6 +376,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/admins'
     | '/app'
     | '/join'
     | '/admin/assistant'
@@ -362,6 +390,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/students'
     | '/admin/talent'
+    | '/admins/$'
     | '/app/communities'
     | '/app/ideas'
     | '/app/messages'
@@ -372,6 +401,7 @@ export interface FileRouteTypes {
     | '/app/projects'
     | '/app/recruitment'
     | '/app/settings'
+    | '/auth/callback'
     | '/admin/'
     | '/app/'
     | '/admin/communities/$id'
@@ -387,6 +417,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admins'
     | '/join'
     | '/admin/assistant'
     | '/admin/events'
@@ -398,12 +429,14 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/students'
     | '/admin/talent'
+    | '/admins/$'
     | '/app/messages'
     | '/app/notifications'
     | '/app/opportunities'
     | '/app/profile'
     | '/app/recruitment'
     | '/app/settings'
+    | '/auth/callback'
     | '/admin'
     | '/app'
     | '/admin/communities/$id'
@@ -420,6 +453,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/admins'
     | '/app'
     | '/join'
     | '/admin/assistant'
@@ -433,6 +467,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/students'
     | '/admin/talent'
+    | '/admins/$'
     | '/app/communities'
     | '/app/ideas'
     | '/app/messages'
@@ -443,6 +478,7 @@ export interface FileRouteTypes {
     | '/app/projects'
     | '/app/recruitment'
     | '/app/settings'
+    | '/auth/callback'
     | '/admin/'
     | '/app/'
     | '/admin/communities/$id'
@@ -460,8 +496,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AdminsRoute: typeof AdminsRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
   JoinRoute: typeof JoinRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -478,6 +516,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admins': {
+      id: '/admins'
+      path: '/admins'
+      fullPath: '/admins'
+      preLoaderRoute: typeof AdminsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -578,6 +623,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTalentRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admins/$': {
+      id: '/admins/$'
+      path: '/$'
+      fullPath: '/admins/$'
+      preLoaderRoute: typeof AdminsSplatRouteImport
+      parentRoute: typeof AdminsRoute
+    }
     '/app/': {
       id: '/app/'
       path: '/'
@@ -654,6 +706,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/communities/': {
       id: '/admin/communities/'
@@ -773,6 +832,17 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface AdminsRouteChildren {
+  AdminsSplatRoute: typeof AdminsSplatRoute
+}
+
+const AdminsRouteChildren: AdminsRouteChildren = {
+  AdminsSplatRoute: AdminsSplatRoute,
+}
+
+const AdminsRouteWithChildren =
+  AdminsRoute._addFileChildren(AdminsRouteChildren)
+
 interface AppCommunitiesRouteChildren {
   AppCommunitiesIdRoute: typeof AppCommunitiesIdRoute
   AppCommunitiesIndexRoute: typeof AppCommunitiesIndexRoute
@@ -862,8 +932,10 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AdminsRoute: AdminsRouteWithChildren,
   AppRoute: AppRouteWithChildren,
   JoinRoute: JoinRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
