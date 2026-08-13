@@ -180,7 +180,7 @@ function SettingsPage() {
           <div>
             <p className="text-sm font-medium">School account</p>
             <p className="text-xs text-muted-foreground">
-              {currentUser.name} · APS Dhaula Kuan (demo session until Microsoft auth is enabled)
+              {currentUser.name} · APS Dhaula Kuan · signed in on this device
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

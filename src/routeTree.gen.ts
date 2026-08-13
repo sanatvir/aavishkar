@@ -35,6 +35,8 @@ import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppProjectsRouteImport } from './routes/app.projects'
 import { Route as AppRecruitmentRouteImport } from './routes/app.recruitment'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as LoginAdminRouteImport } from './routes/login.admin'
+import { Route as LoginStudentRouteImport } from './routes/login.student'
 import { Route as AdminCommunitiesIndexRouteImport } from './routes/admin.communities.index'
 import { Route as AdminCommunitiesIdRouteImport } from './routes/admin.communities.$id'
 import { Route as AppCommunitiesIndexRouteImport } from './routes/app.communities.index'
@@ -176,6 +178,16 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const LoginAdminRoute = LoginAdminRouteImport.update({
+  id: '/login/admin',
+  path: '/login/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginStudentRoute = LoginStudentRouteImport.update({
+  id: '/login/student',
+  path: '/login/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminCommunitiesIndexRoute = AdminCommunitiesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -252,6 +264,8 @@ export interface FileRoutesByFullPath {
   '/app/projects': typeof AppProjectsRouteWithChildren
   '/app/recruitment': typeof AppRecruitmentRoute
   '/app/settings': typeof AppSettingsRoute
+  '/login/admin': typeof LoginAdminRoute
+  '/login/student': typeof LoginStudentRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/communities/$id': typeof AdminCommunitiesIdRoute
@@ -283,6 +297,8 @@ export interface FileRoutesByTo {
   '/app/profile': typeof AppProfileRoute
   '/app/recruitment': typeof AppRecruitmentRoute
   '/app/settings': typeof AppSettingsRoute
+  '/login/admin': typeof LoginAdminRoute
+  '/login/student': typeof LoginStudentRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/admin/communities/$id': typeof AdminCommunitiesIdRoute
@@ -322,6 +338,8 @@ export interface FileRoutesById {
   '/app/projects': typeof AppProjectsRouteWithChildren
   '/app/recruitment': typeof AppRecruitmentRoute
   '/app/settings': typeof AppSettingsRoute
+  '/login/admin': typeof LoginAdminRoute
+  '/login/student': typeof LoginStudentRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/communities/$id': typeof AdminCommunitiesIdRoute
@@ -362,6 +380,8 @@ export interface FileRouteTypes {
     | '/app/projects'
     | '/app/recruitment'
     | '/app/settings'
+    | '/login/admin'
+    | '/login/student'
     | '/admin/'
     | '/app/'
     | '/admin/communities/$id'
@@ -393,6 +413,8 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/recruitment'
     | '/app/settings'
+    | '/login/admin'
+    | '/login/student'
     | '/admin'
     | '/app'
     | '/admin/communities/$id'
@@ -431,6 +453,8 @@ export interface FileRouteTypes {
     | '/app/projects'
     | '/app/recruitment'
     | '/app/settings'
+    | '/login/admin'
+    | '/login/student'
     | '/admin/'
     | '/app/'
     | '/admin/communities/$id'
@@ -449,6 +473,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
+  LoginAdminRoute: typeof LoginAdminRoute
+  LoginStudentRoute: typeof LoginStudentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -634,6 +660,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/login/admin': {
+      id: '/login/admin'
+      path: '/login/admin'
+      fullPath: '/login/admin'
+      preLoaderRoute: typeof LoginAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login/student': {
+      id: '/login/student'
+      path: '/login/student'
+      fullPath: '/login/student'
+      preLoaderRoute: typeof LoginStudentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/communities/': {
       id: '/admin/communities/'
@@ -843,6 +883,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRouteWithChildren,
+  LoginAdminRoute: LoginAdminRoute,
+  LoginStudentRoute: LoginStudentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

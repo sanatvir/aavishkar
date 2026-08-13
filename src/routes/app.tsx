@@ -14,12 +14,12 @@ import {
 } from "lucide-react";
 import { AppShell, type NavItem } from "@/components/layout/AppShell";
 import { useAppState } from "@/lib/app-state";
-import { getSessionPortal } from "@/lib/session";
+import { hasStudentSession } from "@/lib/session";
 
 export const Route = createFileRoute("/app")({
   beforeLoad: () => {
-    if (typeof window !== "undefined" && getSessionPortal() !== "student") {
-      throw redirect({ to: "/" });
+    if (typeof window !== "undefined" && !hasStudentSession()) {
+      throw redirect({ to: "/login/student" });
     }
   },
   component: StudentLayout,

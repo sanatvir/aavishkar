@@ -50,9 +50,20 @@ function AdminSettings() {
   const navigate = useNavigate();
   const { platformSettings, updatePlatformSettings, updateCoordinatorPicture, pendingIdeas } = useAppState();
   const [coordinatorName, setCoordinatorName] = useState(platformSettings.coordinatorName);
+  const [coordinatorCode, setCoordinatorCode] = useState(platformSettings.coordinatorSignInCode);
 
   const saveCoordinatorName = () => {
     updatePlatformSettings({ coordinatorName });
+  };
+
+  const saveCoordinatorCode = () => {
+    const trimmed = coordinatorCode.trim();
+    if (!trimmed) {
+      toast.error("Coordinator code cannot be empty.");
+      return;
+    }
+    updatePlatformSettings({ coordinatorSignInCode: trimmed });
+    toast.success("Coordinator sign-in code updated.");
   };
 
   const signOut = () => {
@@ -125,20 +136,37 @@ function AdminSettings() {
               <Label>Coordinator display name</Label>
               <Input value={coordinatorName} onChange={(e) => setCoordinatorName(e.target.value)} />
             </div>
+            <div className="space-y-1.5">
+              <Label>Coordinator sign-in code</Label>
+              <Input
+                type="password"
+                value={coordinatorCode}
+                onChange={(e) => setCoordinatorCode(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={saveCoordinatorName}>Save coordinator name</Button>
+            <Button variant="outline" onClick={saveCoordinatorCode}>
+              Save sign-in code
+            </Button>
           </div>
           <Row
-            label="Restrict sign-in to school accounts"
-            hint="Only @apsdk.edu.in Microsoft accounts (when auth is enabled)."
+            label="Require sign-in codes for students"
+            hint="When on, students pick their name and enter a personal code from the roster."
             checked={platformSettings.restrictSignin}
             onCheckedChange={(v) => updatePlatformSettings({ restrictSignin: v }, { silent: true })}
           />
+          <Button variant="outline" onClick={() => navigate({ to: "/admin/students" })}>
+            Manage student sign-in codes
+          </Button>
           <Row
             label="Allow students to create projects"
             hint="Without coordinator approval."
             checked={platformSettings.allowStudentProjects}
             onCheckedChange={(v) => updatePlatformSettings({ allowStudentProjects: v }, { silent: true })}
           />
-          <Button onClick={saveCoordinatorName}>Save coordinator name</Button>
         </TabsContent>
 
         <TabsContent value="permissions" className="surface mt-6 p-6">

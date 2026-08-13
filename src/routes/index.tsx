@@ -6,7 +6,6 @@ import { LoginVisual } from "@/components/brand/LoginVisual";
 import { Button } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { loadPublicStats } from "@/lib/supabase/store";
-import { setCoordinatorSession, setStudentSession } from "@/lib/session";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -71,10 +70,7 @@ function Landing() {
             <Button
               size="lg"
               className="h-13 gap-3 px-6 text-base"
-              onClick={() => {
-                setStudentSession();
-                navigate({ to: "/app" });
-              }}
+              onClick={() => navigate({ to: "/login/student" })}
             >
               <MicrosoftGlyph />
               Student sign-in
@@ -84,10 +80,7 @@ function Landing() {
               variant="outline"
               size="lg"
               className="h-13 gap-3 px-6 text-base"
-              onClick={() => {
-                setCoordinatorSession();
-                navigate({ to: "/admin" });
-              }}
+              onClick={() => navigate({ to: "/login/admin" })}
             >
               <ShieldCheck className="h-4 w-4" />
               Admin login

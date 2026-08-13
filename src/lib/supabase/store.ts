@@ -70,6 +70,7 @@ export type PlatformSettings = {
   institution: string;
   coordinatorName: string;
   coordinatorAvatarUrl?: string;
+  coordinatorSignInCode: string;
   restrictSignin: boolean;
   allowStudentProjects: boolean;
   coordinatorsCloseRecruitments: boolean;
@@ -118,10 +119,6 @@ export type AppDataSnapshot = {
   communityJoinApplications: CommunityJoinApplication[];
   communityPosts: CommunityPost[];
 };
-
-const seedCommunityExtras = new Map(
-  seedCommunities.map((c) => [c.id, { sessions: c.sessions, resources: c.resources }]),
-);
 
 const pairKey = (a: string, b: string) => (a < b ? [a, b] : [b, a]);
 
@@ -211,6 +208,7 @@ const mapPlatformSettings = (row: {
   institution: string;
   coordinator_name?: string | null;
   coordinator_avatar_url?: string | null;
+  coordinator_sign_in_code?: string | null;
   restrict_signin: boolean;
   allow_student_projects: boolean;
   coordinators_close_recruitments: boolean;
@@ -226,6 +224,7 @@ const mapPlatformSettings = (row: {
   institution: INSTITUTION_NAME,
   coordinatorName: row.coordinator_name ?? "ATL Coordinator",
   coordinatorAvatarUrl: row.coordinator_avatar_url ?? undefined,
+  coordinatorSignInCode: row.coordinator_sign_in_code ?? "apsdk-atl",
   restrictSignin: row.restrict_signin,
   allowStudentProjects: row.allow_student_projects,
   coordinatorsCloseRecruitments: row.coordinators_close_recruitments,
@@ -242,6 +241,7 @@ const defaultPlatformSettings = (): PlatformSettings => ({
   platformName: PLATFORM_NAME,
   institution: INSTITUTION_NAME,
   coordinatorName: "ATL Coordinator",
+  coordinatorSignInCode: "apsdk-atl",
   restrictSignin: true,
   allowStudentProjects: true,
   coordinatorsCloseRecruitments: true,
@@ -318,6 +318,7 @@ export async function ensureSeeded() {
       status: s.status,
       accent: s.accent,
       role: "student",
+      sign_in_code: s.id.toLowerCase(),
     })),
   );
 
@@ -378,6 +379,8 @@ export async function ensureSeeded() {
       description: c.description,
       activity: c.activity,
       accent: c.accent,
+      sessions: c.sessions,
+      resources: c.resources,
     })),
   );
 
@@ -650,19 +653,16 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
 
   return {
     students: (studentsRes.data ?? []).map(mapStudent),
-    communities: (communitiesRes.data ?? []).map((c) => {
-      const extras = seedCommunityExtras.get(c.id);
-      return {
-        id: c.id,
-        name: c.name,
-        members: communityMemberCounts.get(c.id) ?? c.members,
-        description: c.description,
-        activity: c.activity ?? [],
-        accent: c.accent,
-        sessions: extras?.sessions ?? [],
-        resources: extras?.resources ?? [],
-      };
-    }),
+    communities: (communitiesRes.data ?? []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      members: communityMemberCounts.get(c.id) ?? c.members,
+      description: c.description,
+      activity: c.activity ?? [],
+      accent: c.accent,
+      sessions: Array.isArray(c.sessions) ? c.sessions : [],
+      resources: Array.isArray(c.resources) ? c.resources : [],
+    })),
     opportunities: (opportunitiesRes.data ?? []) as Opportunity[],
     connections: (connectionsRes.data ?? []).map((c) => c.connected_id),
     joinedCommunities: (communityMembersRes.data ?? []).map((c) => c.community_id),
@@ -948,6 +948,7 @@ export async function syncPlatformSettings(settings: PlatformSettings) {
     institution: INSTITUTION_NAME,
     coordinator_name: settings.coordinatorName,
     coordinator_avatar_url: settings.coordinatorAvatarUrl ?? null,
+    coordinator_sign_in_code: settings.coordinatorSignInCode,
     restrict_signin: settings.restrictSignin,
     allow_student_projects: settings.allowStudentProjects,
     coordinators_close_recruitments: settings.coordinatorsCloseRecruitments,
@@ -1034,6 +1035,8 @@ export async function insertCommunity(community: Community) {
     description: community.description,
     activity: community.activity,
     accent: community.accent,
+    sessions: community.sessions,
+    resources: community.resources,
   });
 }
 

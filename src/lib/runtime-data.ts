@@ -43,6 +43,7 @@ const defaultPlatformSettings = (): PlatformSettings => ({
   platformName: PLATFORM_NAME,
   institution: INSTITUTION_NAME,
   coordinatorName: "ATL Coordinator",
+  coordinatorSignInCode: "apsdk-atl",
   restrictSignin: true,
   allowStudentProjects: true,
   coordinatorsCloseRecruitments: true,
