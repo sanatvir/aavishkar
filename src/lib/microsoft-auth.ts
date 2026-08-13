@@ -1,67 +1,60 @@
-import { isSupabaseConfigured, supabase } from "./supabase/client";
+import { isSupabaseConfigured } from "./supabase/client";
 import { DEMO_STUDENT_ID, setStudentSession } from "./session";
-
-const APSDK_EMAIL_SUFFIX = "@apsdk.edu.in";
-
-/** Set `VITE_ENABLE_MICROSOFT_AUTH=true` after Azure is configured in Supabase Auth. */
-export const isMicrosoftAuthEnabled =
-  import.meta.env.VITE_ENABLE_MICROSOFT_AUTH === "true" && isSupabaseConfigured;
 
 export type MicrosoftSignInResult = "redirect" | "demo";
 
+type AuthConfigResponse = {
+  enabled: boolean;
+  reason?: string;
+};
+
+export async function fetchMicrosoftAuthConfig(): Promise<AuthConfigResponse> {
+  try {
+    const res = await fetch("/api/auth/config");
+    if (!res.ok) {
+      return { enabled: false, reason: "Auth server unavailable." };
+    }
+    return (await res.json()) as AuthConfigResponse;
+  } catch {
+    return { enabled: false, reason: "Could not reach the auth server." };
+  }
+}
+
 export async function signInWithMicrosoft(): Promise<MicrosoftSignInResult> {
-  if (isMicrosoftAuthEnabled) {
-    const redirectTo = `${window.location.origin}/auth/callback`;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "azure",
-      options: {
-        redirectTo,
-        scopes: "email openid profile",
-      },
-    });
-    if (error) throw error;
+  const config = await fetchMicrosoftAuthConfig();
+
+  if (config.enabled) {
+    window.location.href = "/api/auth/microsoft";
     return "redirect";
   }
 
-  setStudentSession(DEMO_STUDENT_ID);
-  return "demo";
-}
-
-function studentIdFromEmail(email: string): string {
-  const normalized = email.trim().toLowerCase();
-  if (normalized.endsWith(APSDK_EMAIL_SUFFIX)) {
-    return normalized.slice(0, -APSDK_EMAIL_SUFFIX.length);
+  if (!isSupabaseConfigured) {
+    setStudentSession(DEMO_STUDENT_ID);
+    return "demo";
   }
-  return normalized.split("@")[0] ?? normalized;
+
+  throw new Error(
+    config.reason ??
+      "Microsoft sign-in is not configured. Add Azure keys and AUTH_SECRET to the server environment.",
+  );
 }
 
-/** After OAuth redirect, map the Microsoft account to a roster student id. */
-export async function completeMicrosoftAuthCallback(): Promise<string | null> {
-  if (!isSupabaseConfigured) return null;
+export async function verifyAuthSessionToken(
+  token: string,
+): Promise<{ studentId: string; email: string } | null> {
+  const res = await fetch("/api/auth/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
 
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
-  if (error || !session?.user?.email) return null;
+  if (!res.ok) return null;
 
-  const studentId = studentIdFromEmail(session.user.email);
-  const { data: student } = await supabase
-    .from("students")
-    .select("id, status")
-    .eq("id", studentId)
-    .maybeSingle();
-
-  if (student?.status === "Active") return student.id;
-
-  // Fallback: first active student with matching email prefix in id
-  const { data: roster } = await supabase.from("students").select("id, status").eq("status", "Active");
-  const match = (roster ?? []).find((s) => s.id === studentId);
-  return match?.id ?? null;
+  const data = (await res.json()) as { ok?: boolean; studentId?: string; email?: string };
+  if (!data.ok || !data.studentId || !data.email) return null;
+  return { studentId: data.studentId, email: data.email };
 }
 
 export async function signOutMicrosoftAuth() {
-  if (isSupabaseConfigured) {
-    await supabase.auth.signOut();
-  }
+  // Server sessions are one-time tokens; clearing local portal session is enough.
 }

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AavishkarLogo } from "@/components/brand/AavishkarLogo";
-import { completeMicrosoftAuthCallback } from "@/lib/microsoft-auth";
+import { verifyAuthSessionToken } from "@/lib/microsoft-auth";
 import { setStudentSession } from "@/lib/session";
 
 export const Route = createFileRoute("/auth/callback")({
@@ -20,17 +20,39 @@ function AuthCallback() {
     let cancelled = false;
 
     void (async () => {
-      const studentId = await completeMicrosoftAuthCallback();
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get("error");
+      const token = params.get("token");
+
+      if (error) {
+        if (!cancelled) {
+          setMessage(error);
+          toast.error(error);
+          navigate({ to: "/", replace: true });
+        }
+        return;
+      }
+
+      if (!token) {
+        if (!cancelled) {
+          setMessage("Missing sign-in token.");
+          toast.error("Microsoft sign-in did not complete.");
+          navigate({ to: "/", replace: true });
+        }
+        return;
+      }
+
+      const session = await verifyAuthSessionToken(token);
       if (cancelled) return;
 
-      if (!studentId) {
-        setMessage("We couldn't match your school account to a student profile.");
-        toast.error("No AAVISHKAR student profile found for this Microsoft account.");
+      if (!session) {
+        setMessage("Your sign-in link expired. Please try again.");
+        toast.error("Sign-in session expired. Use Continue with Microsoft again.");
         navigate({ to: "/", replace: true });
         return;
       }
 
-      setStudentSession(studentId);
+      setStudentSession(session.studentId);
       toast.success("Signed in with Microsoft.");
       navigate({ to: "/app", replace: true });
     })();

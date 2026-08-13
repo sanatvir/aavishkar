@@ -62,8 +62,9 @@ function Landing() {
       if (result === "demo") {
         navigate({ to: "/app" });
       }
-    } catch {
-      toast.error("Microsoft sign-in failed. Try again or contact your ATL coordinator.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Microsoft sign-in failed.";
+      toast.error(message);
     } finally {
       setSigningIn(false);
     }

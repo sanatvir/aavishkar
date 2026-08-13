@@ -87,6 +87,26 @@ npm run dev
 
 If env vars are missing, the site loads in offline demo mode instead of crashing with a 500.
 
+## 5b. Microsoft student sign-in
+
+Add these **server-only** env vars (`.env` locally, Vercel → Environment Variables). Restart / redeploy after changes.
+
+| Name | Value |
+|------|--------|
+| `AZURE_CLIENT_ID` | Azure App registration → Application (client) ID |
+| `AZURE_CLIENT_SECRET` | Certificates & secrets → new client secret value |
+| `AZURE_TENANT_ID` | Azure → Directory (tenant) ID |
+| `AUTH_SECRET` | Long random string (signs login sessions) |
+| `APP_URL` | `https://your-app.vercel.app` (or `http://localhost:3000` locally) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Recommended — Supabase → Settings → API → service_role |
+
+**Azure redirect URIs** (Authentication → Web):
+
+- `http://localhost:3000/api/auth/microsoft/callback`
+- `https://YOUR-DOMAIN/api/auth/microsoft/callback`
+
+Student Microsoft emails must match roster ids (e.g. `sanatvir@apsdk.edu.in` → student `sanatvir` in the `students` table).
+
 ## 6. Local production preview
 
 ```powershell
