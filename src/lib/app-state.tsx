@@ -63,6 +63,7 @@ import {
   insertOpportunity,
   insertRecruitment,
   insertReport,
+  insertStudent,
   loadAppData,
   logActivity,
   publishIdeaLive,
@@ -82,6 +83,7 @@ import {
   syncShortlist,
   syncShortlistMany,
   syncStudentSettings,
+  syncStudentRecord,
   updateStudent,
   updateStudentAvatar,
   updateStudentStatus,
@@ -102,6 +104,15 @@ type NewIdea = {
 };
 
 type NewProject = { title: string; description: string; deadline: string };
+
+type NewStudent = {
+  name: string;
+  className: string;
+  bio: string;
+  skills: string;
+  interests: string;
+  availability: Student["availability"];
+};
 
 function joinApplicationSortKey(app: CommunityJoinApplication): number {
   const fromId = /^cja-(\d+)$/.exec(app.id);
@@ -196,6 +207,9 @@ type AppState = {
   pendingIdeas: Idea[];
   publishIdea: (id: string) => void;
   restrictStudent: (id: string) => void;
+  reactivateStudent: (id: string) => void;
+  addStudent: (draft: NewStudent) => void;
+  saveStudentRecord: (student: Student) => void;
   addProjectFile: (projectId: string, file: File) => void;
   filterOptions: { skills: string[]; interests: string[]; classes: string[]; categories: string[] };
   refreshData: () => Promise<void>;
@@ -1044,9 +1058,78 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         toast.success("Idea published to the school");
       },
       restrictStudent: (id) => {
-        setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, status: "Inactive" } : s)));
+        setStudents((prev) => {
+          const next = prev.map((s) => (s.id === id ? { ...s, status: "Inactive" as const } : s));
+          setLiveStudents(next);
+          return next;
+        });
         void updateStudentStatus(id, "Inactive");
         toast.message(`${nameOf(id)} marked inactive`);
+      },
+      reactivateStudent: (id) => {
+        setStudents((prev) => {
+          const next = prev.map((s) => (s.id === id ? { ...s, status: "Active" as const } : s));
+          setLiveStudents(next);
+          return next;
+        });
+        void updateStudentStatus(id, "Active");
+        toast.message(`${nameOf(id)} reactivated`);
+      },
+      addStudent: (draft) => {
+        if (!draft.name.trim()) {
+          toast.error("Student name is required.");
+          return;
+        }
+        const skills = draft.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const interests = draft.interests
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const id = uniqueSlug(draft.name, students.map((s) => s.id));
+        const initials =
+          draft.name
+            .trim()
+            .split(/\s+/)
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase() || "ST";
+        const student: Student = {
+          id,
+          name: draft.name.trim(),
+          className: draft.className.trim() || "Class —",
+          initials,
+          bio: draft.bio.trim(),
+          skills,
+          interests,
+          availability: draft.availability,
+          projects: [],
+          achievements: [],
+          status: "Active",
+          accent: "from-primary to-accent",
+        };
+        setStudents((prev) => {
+          const next = [...prev, student].sort((a, b) => a.name.localeCompare(b.name));
+          setLiveStudents(next);
+          return next;
+        });
+        void insertStudent(student);
+        pushActivity(`New student added: ${student.name}`);
+        toast.success(`${student.name} added to directory`);
+      },
+      saveStudentRecord: (student) => {
+        setStudents((prev) => {
+          const next = prev
+            .map((s) => (s.id === student.id ? student : s))
+            .sort((a, b) => a.name.localeCompare(b.name));
+          setLiveStudents(next);
+          return next;
+        });
+        void syncStudentRecord(student);
+        toast.success("Student record saved");
       },
       addProjectFile: (projectId, file) => {
         void (async () => {

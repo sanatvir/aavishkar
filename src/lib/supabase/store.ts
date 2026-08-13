@@ -886,16 +886,46 @@ export async function insertMessage(
 
 export async function updateStudent(student: Student) {
   if (!isSupabaseConfigured) return;
-  await supabase
-    .from("students")
-    .update({
-      name: student.name,
-      class_name: student.className,
-      bio: student.bio,
-      skills: student.skills,
-      avatar_url: student.avatarUrl ?? null,
-    })
-    .eq("id", student.id);
+  await supabase.from("students").update(studentToRow(student)).eq("id", student.id);
+}
+
+const studentToRow = (student: Student) => ({
+  id: student.id,
+  name: student.name,
+  class_name: student.className,
+  initials: student.initials,
+  bio: student.bio,
+  skills: student.skills,
+  interests: student.interests,
+  availability: student.availability,
+  projects: student.projects,
+  achievements: student.achievements,
+  status: student.status,
+  accent: student.accent,
+  avatar_url: student.avatarUrl ?? null,
+  role: "student" as const,
+});
+
+export async function syncStudentRecord(student: Student) {
+  if (!isSupabaseConfigured) return;
+  await supabase.from("students").upsert(studentToRow(student), { onConflict: "id" });
+}
+
+export async function insertStudent(student: Student) {
+  if (!isSupabaseConfigured) return;
+  const settings = defaultStudentSettings();
+  await supabase.from("students").insert(studentToRow(student));
+  await supabase.from("student_settings").upsert({
+    student_id: student.id,
+    show_in_discover: settings.showInDiscover,
+    show_class: settings.showClass,
+    allow_messages: settings.allowMessages,
+    show_projects_public: settings.showProjectsPublic,
+    notify_connections: settings.notifyConnections,
+    notify_projects: settings.notifyProjects,
+    notify_opportunities: settings.notifyOpportunities,
+    notify_communities: settings.notifyCommunities,
+  });
 }
 
 export async function updateStudentAvatar(studentId: string, avatarUrl: string | null) {
