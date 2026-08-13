@@ -15,21 +15,6 @@ import {
 } from "./admin-metrics";
 import { getCurrentUser, setLiveStudents } from "./current-user";
 import {
-  adminEvents,
-  adminActivity,
-  communities as seedCommunities,
-  opportunities as seedOpportunities,
-  seedCommunityPosts,
-  seedCommunityJoinApplications,
-  seedApplications,
-  seedConversations,
-  seedIdeas,
-  seedNotifications,
-  seedProjects,
-  seedRecruitments,
-  seedReports,
-  seedCommunityMembers,
-  students as seedStudents,
   type Application,
   type Community,
   type Conversation,
@@ -44,6 +29,15 @@ import {
   type CommunityJoinApplication,
 } from "./mock-data";
 import { communitiesWithLiveMemberCounts, deriveClasses, deriveIdeaCategories, deriveInterests, deriveSkills } from "./catalog";
+import { PlatformLoadError } from "@/components/PlatformLoadError";
+import { SupabaseConfigRequired } from "@/components/SupabaseConfigRequired";
+import {
+  createDemoRuntimeBootstrap,
+  createRuntimeBootstrap,
+  requiresSupabaseConfig,
+  type RuntimeBootstrap,
+  useOfflineDemo,
+} from "./runtime-data";
 import { isSupabaseConfigured } from "./supabase/client";
 import { subscribeAppChanges } from "./realtime";
 import type { NewEvent, NewOpportunity, NewRecruitment, NewReport, NewCommunity } from "./types";
@@ -52,7 +46,6 @@ import {
   buildOpportunityFromDraft,
   buildRecruitmentFromDraft,
   bumpConversationUnread,
-  defaultStudentSettings,
   deleteEvent,
   deleteCommunity,
   deleteNotification,
@@ -239,57 +232,44 @@ const uniqueSlug = (s: string, existingIds: string[]) => {
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const userId = getSessionUserId();
   const currentUser = getCurrentUser();
+  const initialRuntime = createRuntimeBootstrap();
 
-  const [ready, setReady] = useState(!isSupabaseConfigured);
-  const [students, setStudents] = useState<Student[]>(seedStudents);
-  const [communities, setCommunities] = useState<Community[]>(() =>
-    communitiesWithLiveMemberCounts(seedCommunities, seedCommunityMembers),
-  );
-  const [opportunities, setOpportunities] = useState<Opportunity[]>(seedOpportunities);
-  const [connections, setConnections] = useState<string[]>(["shaurya", "tanvi", "rehan", "ananya"]);
-  const [joinedCommunities, setJoinedCommunities] = useState<string[]>(["ai-ml", "robotics", "coding"]);
-  const [communityMembers, setCommunityMembers] = useState<Record<string, string[]>>(seedCommunityMembers);
-  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(seedCommunityPosts);
+  const [ready, setReady] = useState(useOfflineDemo);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [students, setStudents] = useState<Student[]>(initialRuntime.students);
+  const [communities, setCommunities] = useState<Community[]>(initialRuntime.communities);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>(initialRuntime.opportunities);
+  const [connections, setConnections] = useState<string[]>(initialRuntime.connections);
+  const [joinedCommunities, setJoinedCommunities] = useState<string[]>(initialRuntime.joinedCommunities);
+  const [communityMembers, setCommunityMembers] = useState<Record<string, string[]>>(initialRuntime.communityMembers);
+  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(initialRuntime.communityPosts);
   const [communityJoinApplications, setCommunityJoinApplications] = useState<CommunityJoinApplication[]>(
-    seedCommunityJoinApplications,
+    initialRuntime.communityJoinApplications,
   );
-  const [ideas, setIdeas] = useState<Idea[]>(seedIdeas);
-  const [supported, setSupported] = useState<string[]>(["campus-air-map"]);
-  const [joinedIdeas, setJoinedIdeas] = useState<string[]>([]);
-  const [projects, setProjects] = useState<Project[]>(seedProjects);
-  const [conversations, setConversations] = useState<Conversation[]>(seedConversations);
-  const [notifications, setNotifications] = useState<Notification[]>(seedNotifications);
-  const [savedOpportunities, setSavedOpportunities] = useState<string[]>([]);
-  const [registeredOpportunities, setRegisteredOpportunities] = useState<string[]>([]);
-  const [shortlist, setShortlist] = useState<string[]>([]);
-  const [recruitments, setRecruitments] = useState<Recruitment[]>(seedRecruitments);
-  const [applications, setApplications] = useState<Application[]>(seedApplications);
-  const [reports, setReports] = useState<Report[]>(seedReports);
-  const [events, setEvents] = useState<PlatformEvent[]>(
-    adminEvents.map((e, i) => ({ id: `event-${i}`, ...e, seats: e.seats })),
+  const [ideas, setIdeas] = useState<Idea[]>(initialRuntime.ideas);
+  const [supported, setSupported] = useState<string[]>(initialRuntime.supported);
+  const [joinedIdeas, setJoinedIdeas] = useState<string[]>(initialRuntime.joinedIdeas);
+  const [projects, setProjects] = useState<Project[]>(initialRuntime.projects);
+  const [conversations, setConversations] = useState<Conversation[]>(initialRuntime.conversations);
+  const [notifications, setNotifications] = useState<Notification[]>(initialRuntime.notifications);
+  const [savedOpportunities, setSavedOpportunities] = useState<string[]>(initialRuntime.savedOpportunities);
+  const [registeredOpportunities, setRegisteredOpportunities] = useState<string[]>(
+    initialRuntime.registeredOpportunities,
   );
-  const [activity, setActivity] = useState<ActivityItem[]>(adminActivity);
-  const [projectCreatedAt, setProjectCreatedAt] = useState<Map<string, string>>(new Map());
-  const [studentSettings, setStudentSettings] = useState<StudentSettings>(defaultStudentSettings());
-  const [platformSettings, setPlatformSettings] = useState<PlatformSettings>({
-    platformName: PLATFORM_NAME,
-    institution: INSTITUTION_NAME,
-    coordinatorName: "ATL Coordinator",
-    restrictSignin: true,
-    allowStudentProjects: true,
-    coordinatorsCloseRecruitments: true,
-    teachersPublishOpportunities: false,
-    studentLeadsCommunities: true,
-    autoFlagConnections: true,
-    requireIdeaReview: false,
-    deadlineReminders: true,
-    weeklyDigest: true,
-    recruitmentAlerts: true,
-  });
-  const [discoverHiddenIds, setDiscoverHiddenIds] = useState<string[]>([]);
+  const [shortlist, setShortlist] = useState<string[]>(initialRuntime.shortlist);
+  const [recruitments, setRecruitments] = useState<Recruitment[]>(initialRuntime.recruitments);
+  const [applications, setApplications] = useState<Application[]>(initialRuntime.applications);
+  const [reports, setReports] = useState<Report[]>(initialRuntime.reports);
+  const [events, setEvents] = useState<PlatformEvent[]>(initialRuntime.events);
+  const [activity, setActivity] = useState<ActivityItem[]>(initialRuntime.activity);
+  const [projectCreatedAt, setProjectCreatedAt] = useState<Map<string, string>>(initialRuntime.projectCreatedAt);
+  const [studentSettings, setStudentSettings] = useState<StudentSettings>(initialRuntime.studentSettings);
+  const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(initialRuntime.platformSettings);
+  const [discoverHiddenIds, setDiscoverHiddenIds] = useState<string[]>(initialRuntime.discoverHiddenIds);
   const loadGeneration = useRef(0);
 
-  const applySnapshot = (data: NonNullable<Awaited<ReturnType<typeof loadAppData>>>) => {
+  const applyRuntimeState = (data: RuntimeBootstrap | NonNullable<Awaited<ReturnType<typeof loadAppData>>>) => {
     setStudents(data.students);
     setLiveStudents(data.students);
     setCommunities(communitiesWithLiveMemberCounts(data.communities, data.communityMembers));
@@ -328,22 +308,30 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const generation = ++loadGeneration.current;
     const data = await loadAppData(userId);
     if (generation !== loadGeneration.current || !data) return;
-    applySnapshot(data);
+    applyRuntimeState(data);
   };
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
 
     let cancelled = false;
+    setReady(false);
+    setLoadError(null);
+
     (async () => {
       try {
         await ensureSeeded();
         const data = await loadAppData(userId);
         if (cancelled || !data) return;
-        applySnapshot(data);
+        applyRuntimeState(data);
       } catch (err) {
         console.error("[AAVISHKAR] Failed to load Supabase data", err);
-        toast.error("Could not load saved data. Using offline demo state.");
+        if (import.meta.env.PROD) {
+          setLoadError("Check your Supabase project, SQL migrations, and network connection, then try again.");
+        } else {
+          applyRuntimeState(createDemoRuntimeBootstrap());
+          toast.error("Supabase load failed — using local demo data for development.");
+        }
       } finally {
         if (!cancelled) setReady(true);
       }
@@ -352,7 +340,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, loadAttempt]);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !ready) return;
@@ -994,12 +982,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const report: Report = {
           id: `r-${Date.now()}`,
           target: draft.target,
-          targetId: draft.targetId,
           kind: draft.kind,
           reason: draft.reason,
           date: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
           status: "Open",
         };
+        if (draft.targetId) report.targetId = draft.targetId;
         setReports((prev) => [report, ...prev]);
         void insertReport(report);
         toast.success("Report submitted to coordinators");
@@ -1144,6 +1132,22 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     platformSettings,
     discoverHiddenIds,
   ]);
+
+  if (requiresSupabaseConfig) {
+    return <SupabaseConfigRequired />;
+  }
+
+  if (loadError) {
+    return (
+      <PlatformLoadError
+        message={loadError}
+        onRetry={() => {
+          setLoadError(null);
+          setLoadAttempt((n) => n + 1);
+        }}
+      />
+    );
+  }
 
   if (!ready) {
     return (

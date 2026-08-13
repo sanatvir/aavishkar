@@ -687,15 +687,19 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
       note: a.note,
       stage: a.stage,
     })),
-    reports: (reportsRes.data ?? []).map((row) => ({
-      id: row.id,
-      target: row.target,
-      targetId: (row as { target_id?: string }).target_id,
-      kind: row.kind as Report["kind"],
-      reason: row.reason,
-      date: row.date,
-      status: row.status as Report["status"],
-    })),
+    reports: (reportsRes.data ?? []).map((row) => {
+      const report: Report = {
+        id: row.id,
+        target: row.target,
+        kind: row.kind as Report["kind"],
+        reason: row.reason,
+        date: row.date,
+        status: row.status as Report["status"],
+      };
+      const targetId = (row as { target_id?: string }).target_id;
+      if (targetId) report.targetId = targetId;
+      return report;
+    }),
     events,
     activity: activityFromLog,
     studentSettings: studentSettingsRes.data

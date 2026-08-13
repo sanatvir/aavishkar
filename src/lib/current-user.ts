@@ -1,4 +1,5 @@
-import { currentUser as fallbackUser, students as fallbackStudents, type Student } from "./mock-data";
+import { isSupabaseConfigured } from "./supabase/client";
+import { currentUser as demoUser, students as demoStudents, type Student } from "./mock-data";
 import { getSessionUserId } from "./session";
 
 let liveStudents: Student[] | null = null;
@@ -8,12 +9,33 @@ export function setLiveStudents(list: Student[]) {
 }
 
 export function getStudents(): Student[] {
-  return liveStudents ?? fallbackStudents;
+  if (isSupabaseConfigured) return liveStudents ?? [];
+  return liveStudents ?? demoStudents;
+}
+
+function placeholderStudent(id: string): Student {
+  return {
+    id,
+    name: "Student",
+    className: "",
+    initials: "?",
+    bio: "",
+    skills: [],
+    interests: [],
+    availability: "Available",
+    projects: [],
+    achievements: [],
+    status: "Active",
+    accent: "from-primary to-accent",
+  };
 }
 
 export function getCurrentUser(): Student {
   const id = getSessionUserId();
-  return getStudents().find((s) => s.id === id) ?? fallbackUser;
+  const found = getStudents().find((s) => s.id === id);
+  if (found) return found;
+  if (isSupabaseConfigured) return placeholderStudent(id);
+  return demoUser;
 }
 
 export function findStudentById(id: string): Student | undefined {
