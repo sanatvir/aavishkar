@@ -24,6 +24,7 @@ import { Route as AdminProjectsRouteImport } from './routes/admin.projects'
 import { Route as AdminRecruitmentRouteImport } from './routes/admin.recruitment'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminShortlistRouteImport } from './routes/admin.shortlist'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminTalentRouteImport } from './routes/admin.talent'
 import { Route as AdminsSplatRouteImport } from './routes/admins/$'
@@ -123,6 +124,11 @@ const AdminReportsRoute = AdminReportsRouteImport.update({
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminShortlistRoute = AdminShortlistRouteImport.update({
+  id: '/shortlist',
+  path: '/shortlist',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminStudentsRoute = AdminStudentsRouteImport.update({
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/admin/recruitment': typeof AdminRecruitmentRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/shortlist': typeof AdminShortlistRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/talent': typeof AdminTalentRoute
   '/admins/$': typeof AdminsSplatRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/admin/recruitment': typeof AdminRecruitmentRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/shortlist': typeof AdminShortlistRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/talent': typeof AdminTalentRoute
   '/admins/$': typeof AdminsSplatRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/admin/recruitment': typeof AdminRecruitmentRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/shortlist': typeof AdminShortlistRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/talent': typeof AdminTalentRoute
   '/admins/$': typeof AdminsSplatRoute
@@ -388,6 +397,7 @@ export interface FileRouteTypes {
     | '/admin/recruitment'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/shortlist'
     | '/admin/students'
     | '/admin/talent'
     | '/admins/$'
@@ -427,6 +437,7 @@ export interface FileRouteTypes {
     | '/admin/recruitment'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/shortlist'
     | '/admin/students'
     | '/admin/talent'
     | '/admins/$'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/admin/recruitment'
     | '/admin/reports'
     | '/admin/settings'
+    | '/admin/shortlist'
     | '/admin/students'
     | '/admin/talent'
     | '/admins/$'
@@ -607,6 +619,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/shortlist': {
+      id: '/admin/shortlist'
+      path: '/shortlist'
+      fullPath: '/admin/shortlist'
+      preLoaderRoute: typeof AdminShortlistRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/students': {
@@ -810,6 +829,7 @@ interface AdminRouteChildren {
   AdminRecruitmentRoute: typeof AdminRecruitmentRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminShortlistRoute: typeof AdminShortlistRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminTalentRoute: typeof AdminTalentRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -825,6 +845,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRecruitmentRoute: AdminRecruitmentRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminShortlistRoute: AdminShortlistRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminTalentRoute: AdminTalentRoute,
   AdminIndexRoute: AdminIndexRoute,

@@ -10,6 +10,7 @@ import {
   Lightbulb,
   Settings,
   Sparkles,
+  Star,
   Trophy,
   UserSearch,
   Users,
@@ -26,12 +27,13 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminLayout() {
-  const { platformSettings } = useAppState();
+  const { platformSettings, shortlist } = useAppState();
 
   const nav: NavItem[] = [
     { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
     { to: "/admin/students", label: "Students", icon: Users },
     { to: "/admin/talent", label: "Talent", icon: UserSearch },
+    { to: "/admin/shortlist", label: "Shortlist", icon: Star, badge: shortlist.length || undefined },
     { to: "/admin/recruitment", label: "Recruitment", icon: Sparkles },
     { to: "/admin/ideas", label: "Idea review", icon: Lightbulb },
     { to: "/admin/projects", label: "Projects", icon: FolderKanban },

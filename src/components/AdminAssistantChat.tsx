@@ -9,9 +9,11 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { StudentProfile } from "@/components/StudentProfile";
 import { Avatar, Chip } from "@/components/ui-kit/primitives";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
   buildPlatformContext,
@@ -25,6 +27,7 @@ import {
 import { chatWithAdminAssistantSafe } from "@/lib/admin-assistant";
 import { useAppState } from "@/lib/app-state";
 import { WELCOME_MESSAGE } from "@/lib/admin-assistant-voice";
+import type { Student } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const WELCOME: AssistantMessage = {
@@ -92,6 +95,7 @@ export function AdminAssistantChat() {
   });
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [profileStudent, setProfileStudent] = useState<Student | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -301,14 +305,19 @@ export function AdminAssistantChat() {
                         {resolvedRecs.map((r) => {
                           const s = r.student!;
                           return (
-                            <div key={r.studentId} className="surface flex items-start gap-3 p-3">
+                            <div key={r.studentId} className="surface flex flex-wrap items-start gap-3 p-3">
                               <Avatar initials={s.initials} accent={s.accent} size="sm" />
                               <div className="min-w-0 flex-1 text-left">
                                 <p className="text-sm font-semibold">{s.name}</p>
                                 <p className="text-xs text-muted-foreground">{s.skills.slice(0, 4).join(" · ")}</p>
                                 <p className="mt-1.5 text-xs text-primary">{r.reason}</p>
                               </div>
-                              <Chip>{s.className}</Chip>
+                              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                                <Chip>{s.className}</Chip>
+                                <Button size="sm" variant="outline" onClick={() => setProfileStudent(s)}>
+                                  View profile
+                                </Button>
+                              </div>
                             </div>
                           );
                         })}
@@ -368,6 +377,17 @@ export function AdminAssistantChat() {
           </div>
         </div>
       </div>
+
+      <Sheet open={!!profileStudent} onOpenChange={(open) => !open && setProfileStudent(null)}>
+        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
+          <SheetHeader>
+            <SheetTitle>Recommended student</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 px-4 pb-8">
+            {profileStudent && <StudentProfile student={profileStudent} embedded />}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

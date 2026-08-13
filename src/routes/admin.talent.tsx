@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { StudentProfile } from "@/components/StudentProfile";
@@ -49,7 +49,18 @@ function TalentPage() {
       <PageHeader
         title="Find Talent"
         subtitle="Combine skills with + to find students who match all of them."
-        action={<Chip tone="accent">{shortlist.length} shortlisted</Chip>}
+        action={
+          shortlist.length > 0 ? (
+            <Link
+              to="/admin/shortlist"
+              className="inline-flex items-center rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent-foreground transition-colors hover:bg-accent/25"
+            >
+              {shortlist.length} shortlisted →
+            </Link>
+          ) : (
+            <Chip tone="neutral">0 shortlisted</Chip>
+          )
+        }
       />
 
       <div className="relative max-w-xl">
