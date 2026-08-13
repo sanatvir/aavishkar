@@ -32,6 +32,9 @@ function placeholderStudent(id: string): Student {
 
 export function getCurrentUser(): Student {
   const id = getSessionUserId();
+  if (!id) {
+    return placeholderStudent("__guest__");
+  }
   const found = getStudents().find((s) => s.id === id);
   if (found) return found;
   if (isSupabaseConfigured) return placeholderStudent(id);

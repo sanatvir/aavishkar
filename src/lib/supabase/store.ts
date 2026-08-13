@@ -902,7 +902,7 @@ export async function updateStudent(student: Student) {
   await supabase.from("students").update(studentToRow(student)).eq("id", student.id);
 }
 
-const studentToRow = (student: Student) => ({
+const studentToRow = (student: Student, onboardingResponses?: Record<string, unknown>) => ({
   id: student.id,
   name: student.name,
   class_name: student.className,
@@ -917,6 +917,9 @@ const studentToRow = (student: Student) => ({
   accent: student.accent,
   avatar_url: student.avatarUrl ?? null,
   role: "student" as const,
+  ...(onboardingResponses
+    ? { onboarding_responses: onboardingResponses, onboarded_at: new Date().toISOString() }
+    : {}),
 });
 
 export async function syncStudentRecord(student: Student) {
@@ -924,10 +927,10 @@ export async function syncStudentRecord(student: Student) {
   await supabase.from("students").upsert(studentToRow(student), { onConflict: "id" });
 }
 
-export async function insertStudent(student: Student) {
+export async function insertStudent(student: Student, onboardingResponses?: Record<string, unknown>) {
   if (!isSupabaseConfigured) return;
   const settings = defaultStudentSettings();
-  await supabase.from("students").insert(studentToRow(student));
+  await supabase.from("students").insert(studentToRow(student, onboardingResponses));
   await supabase.from("student_settings").upsert({
     student_id: student.id,
     show_in_discover: settings.showInDiscover,

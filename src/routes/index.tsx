@@ -6,7 +6,7 @@ import { LoginVisual } from "@/components/brand/LoginVisual";
 import { Button } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { loadPublicStats } from "@/lib/supabase/store";
-import { setCoordinatorSession, setStudentSession } from "@/lib/session";
+import { setCoordinatorSession, beginStudentJoin } from "@/lib/session";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -72,8 +72,8 @@ function Landing() {
               size="lg"
               className="h-13 gap-3 px-6 text-base"
               onClick={() => {
-                setStudentSession();
-                navigate({ to: "/app" });
+                beginStudentJoin();
+                navigate({ to: "/join" });
               }}
             >
               <MicrosoftGlyph />

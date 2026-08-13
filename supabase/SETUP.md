@@ -60,6 +60,7 @@ Run in order after `005_storage.sql`:
 | `007_auth_communities.sql` | Community sessions/resources JSON + auth code columns |
 | `008_students_realtime.sql` | Live sync for student roster |
 | `009_realtime_all.sql` | Live sync for messages, ideas, projects, communities, etc. |
+| `010_onboarding.sql` | Self-registration quiz answers on student profiles |
 
 ## 3. Seed data
 

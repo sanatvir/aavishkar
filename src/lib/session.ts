@@ -7,9 +7,18 @@ export const COORDINATOR_AUTHOR_ID = "coordinator";
 
 export type Portal = "student" | "admin";
 
-export function getSessionUserId(): string {
-  if (typeof window === "undefined") return DEMO_STUDENT_ID;
-  return localStorage.getItem(SESSION_KEY) ?? DEMO_STUDENT_ID;
+export function getSessionUserId(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(SESSION_KEY);
+}
+
+export function hasStudentSession(): boolean {
+  return getSessionUserId() != null;
+}
+
+export function beginStudentJoin() {
+  localStorage.setItem(PORTAL_KEY, "student");
+  localStorage.removeItem(SESSION_KEY);
 }
 
 export function getSessionPortal(): Portal {

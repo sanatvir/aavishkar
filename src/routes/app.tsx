@@ -1,4 +1,5 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import {
   Bell,
   Compass,
@@ -20,8 +21,16 @@ export const Route = createFileRoute("/app")({
 });
 
 function StudentLayout() {
-  const { unreadCount, conversations, currentUser } = useAppState();
+  const navigate = useNavigate();
+  const { unreadCount, conversations, currentUser, needsOnboarding, ready } = useAppState();
   const unreadMessages = conversations.reduce((n, c) => n + c.unread, 0);
+
+  useEffect(() => {
+    if (!ready) return;
+    if (needsOnboarding) {
+      navigate({ to: "/join", replace: true });
+    }
+  }, [ready, needsOnboarding, navigate]);
 
   const nav: NavItem[] = [
     { to: "/app", label: "Home", icon: Home, exact: true },

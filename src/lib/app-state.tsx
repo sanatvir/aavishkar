@@ -100,7 +100,8 @@ import {
   type StudentPrivacy,
   type StudentSettings,
 } from "./supabase/store";
-import { getSessionUserId, getSessionPortal, COORDINATOR_AUTHOR_ID } from "./session";
+import type { OnboardingSubmission } from "./onboarding-quiz";
+import { getSessionUserId, getSessionPortal, COORDINATOR_AUTHOR_ID, setStudentSession } from "./session";
 type NewIdea = {
   title: string;
   category: string;
@@ -136,6 +137,8 @@ type ProfileUpdate = {
 
 type AppState = {
   ready: boolean;
+  needsOnboarding: boolean;
+  completeOnboarding: (submission: OnboardingSubmission) => void;
   students: Student[];
   currentUser: Student;
   communities: Community[];
@@ -260,7 +263,8 @@ const uniqueSlug = (s: string, existingIds: string[]) => {
 };
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const userId = getSessionUserId();
+  const [sessionTick, setSessionTick] = useState(0);
+  const userId = useMemo(() => getSessionUserId() ?? "", [sessionTick]);
   const currentUser = getCurrentUser();
   const initialRuntime = createRuntimeBootstrap();
 
@@ -464,8 +468,50 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const hasApplied = (recruitmentId: string) =>
       applications.some((a) => a.recruitmentId === recruitmentId && a.studentId === userId);
 
+    const needsOnboarding =
+      getSessionPortal() === "student" && (!userId || !students.some((s) => s.id === userId));
+
     return {
       ready,
+      needsOnboarding,
+      completeOnboarding: (submission) => {
+        const id = uniqueSlug(submission.name, students.map((s) => s.id));
+        const initials =
+          submission.name
+            .trim()
+            .split(/\s+/)
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase() || "ST";
+        const student: Student = {
+          id,
+          name: submission.name.trim(),
+          className: submission.className,
+          initials,
+          bio: submission.bio,
+          skills: submission.skills,
+          interests: submission.interests,
+          availability: submission.availability,
+          projects: [],
+          achievements: [],
+          status: "Active",
+          accent: "from-primary to-accent",
+        };
+        setStudentSession(id);
+        setSessionTick((t) => t + 1);
+        setStudents((prev) => {
+          const next = [...prev, student].sort((a, b) => a.name.localeCompare(b.name));
+          setLiveStudents(next);
+          return next;
+        });
+        void insertStudent(student, submission.responses);
+        pushActivity(`${student.name} joined AAVISHKAR`);
+        toast.success(`Welcome, ${student.name.split(" ")[0]}!`, {
+          description: "Your profile is live on the platform.",
+        });
+        setLoadAttempt((n) => n + 1);
+      },
       students,
       currentUser: me,
       communities,
@@ -1416,6 +1462,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     platformSettings,
     discoverHiddenIds,
     studentPrivacyMap,
+    sessionTick,
   ]);
 
   if (requiresSupabaseConfig) {
