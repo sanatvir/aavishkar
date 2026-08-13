@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as JoinRouteImport } from './routes/join'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAssistantRouteImport } from './routes/admin.assistant'
 import { Route as AdminCommunitiesRouteImport } from './routes/admin.communities'
@@ -59,6 +60,11 @@ const AdminRoute = AdminRouteImport.update({
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinRoute = JoinRouteImport.update({
+  id: '/join',
+  path: '/join',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -231,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
+  '/join': typeof JoinRoute
   '/admin/assistant': typeof AdminAssistantRoute
   '/admin/communities': typeof AdminCommunitiesRouteWithChildren
   '/admin/events': typeof AdminEventsRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/join': typeof JoinRoute
   '/admin/assistant': typeof AdminAssistantRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/ideas': typeof AdminIdeasRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
+  '/join': typeof JoinRoute
   '/admin/assistant': typeof AdminAssistantRoute
   '/admin/communities': typeof AdminCommunitiesRouteWithChildren
   '/admin/events': typeof AdminEventsRoute
@@ -341,6 +350,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/app'
+    | '/join'
     | '/admin/assistant'
     | '/admin/communities'
     | '/admin/events'
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/join'
     | '/admin/assistant'
     | '/admin/events'
     | '/admin/ideas'
@@ -410,6 +421,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/app'
+    | '/join'
     | '/admin/assistant'
     | '/admin/communities'
     | '/admin/events'
@@ -449,6 +461,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
+  JoinRoute: typeof JoinRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -472,6 +485,13 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join': {
+      id: '/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -843,6 +863,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRouteWithChildren,
+  JoinRoute: JoinRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
