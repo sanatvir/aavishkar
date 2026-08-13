@@ -1,4 +1,4 @@
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
 import {
   Bell,
   Compass,
@@ -14,14 +14,8 @@ import {
 } from "lucide-react";
 import { AppShell, type NavItem } from "@/components/layout/AppShell";
 import { useAppState } from "@/lib/app-state";
-import { hasStudentSession } from "@/lib/session";
 
 export const Route = createFileRoute("/app")({
-  beforeLoad: () => {
-    if (typeof window !== "undefined" && !hasStudentSession()) {
-      throw redirect({ to: "/" });
-    }
-  },
   component: StudentLayout,
 });
 

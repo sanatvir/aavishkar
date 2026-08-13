@@ -1,5 +1,3 @@
-import { isSupabaseConfigured } from "./supabase/client";
-
 const SESSION_KEY = "aavishkar_user";
 const PORTAL_KEY = "aavishkar_portal";
 
@@ -9,22 +7,9 @@ export const COORDINATOR_AUTHOR_ID = "coordinator";
 
 export type Portal = "student" | "admin";
 
-export function hasStudentSession(): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(PORTAL_KEY) === "student" && Boolean(localStorage.getItem(SESSION_KEY));
-}
-
-export function hasAdminSession(): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(PORTAL_KEY) === "admin";
-}
-
 export function getSessionUserId(): string {
   if (typeof window === "undefined") return DEMO_STUDENT_ID;
-  const id = localStorage.getItem(SESSION_KEY);
-  if (id) return id;
-  if (!isSupabaseConfigured) return DEMO_STUDENT_ID;
-  return DEMO_STUDENT_ID;
+  return localStorage.getItem(SESSION_KEY) ?? DEMO_STUDENT_ID;
 }
 
 export function getSessionPortal(): Portal {
@@ -33,7 +18,7 @@ export function getSessionPortal(): Portal {
   return portal === "admin" ? "admin" : "student";
 }
 
-export function setStudentSession(userId: string) {
+export function setStudentSession(userId: string = DEMO_STUDENT_ID) {
   localStorage.setItem(SESSION_KEY, userId);
   localStorage.setItem(PORTAL_KEY, "student");
 }
