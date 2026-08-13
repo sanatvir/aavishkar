@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, BookOpen, CalendarDays, Megaphone, Send, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, Megaphone, Plus, Send, ShieldCheck, Trash2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Avatar, Chip, PageHeader, SectionHeading } from "@/components/ui-kit/primitives";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppState } from "@/lib/app-state";
 import { COORDINATOR_AUTHOR_ID } from "@/lib/session";
@@ -24,9 +26,12 @@ function AdminCommunityDetail() {
     communityJoinApplications,
     postToCommunity,
     setCommunityJoinApplicationStatus,
+    saveCommunity,
     platformSettings,
   } = useAppState();
   const [postText, setPostText] = useState("");
+  const [sessionDraft, setSessionDraft] = useState({ title: "", when: "", place: "" });
+  const [resourceDraft, setResourceDraft] = useState({ label: "", note: "" });
 
   const community = communities.find((c) => c.id === id);
   const memberIds = getCommunityMemberIds(id);
@@ -193,15 +198,71 @@ function AdminCommunityDetail() {
             <ul className="mt-4 space-y-3">
               {community.sessions.map((s) => (
                 <li key={s.title} className="rounded-xl border border-border p-3 text-sm">
-                  <p className="font-medium">{s.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{s.when}</p>
-                  <p className="text-xs text-muted-foreground">{s.place}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{s.title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{s.when}</p>
+                      <p className="text-xs text-muted-foreground">{s.place}</p>
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        saveCommunity({
+                          ...community,
+                          sessions: community.sessions.filter((x) => x.title !== s.title),
+                        })
+                      }
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </li>
               ))}
               {community.sessions.length === 0 && (
                 <li className="text-sm text-muted-foreground">No sessions listed.</li>
               )}
             </ul>
+            <div className="mt-4 space-y-2 border-t border-border pt-4">
+              <Label className="text-xs">Add session</Label>
+              <Input
+                placeholder="Title"
+                value={sessionDraft.title}
+                onChange={(e) => setSessionDraft({ ...sessionDraft, title: e.target.value })}
+              />
+              <Input
+                placeholder="When"
+                value={sessionDraft.when}
+                onChange={(e) => setSessionDraft({ ...sessionDraft, when: e.target.value })}
+              />
+              <Input
+                placeholder="Place"
+                value={sessionDraft.place}
+                onChange={(e) => setSessionDraft({ ...sessionDraft, place: e.target.value })}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                disabled={!sessionDraft.title.trim()}
+                onClick={() => {
+                  saveCommunity({
+                    ...community,
+                    sessions: [
+                      ...community.sessions,
+                      {
+                        title: sessionDraft.title.trim(),
+                        when: sessionDraft.when.trim() || "TBA",
+                        place: sessionDraft.place.trim() || "TBA",
+                      },
+                    ],
+                  });
+                  setSessionDraft({ title: "", when: "", place: "" });
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" /> Add session
+              </Button>
+            </div>
           </div>
 
           <div className="surface p-5">
@@ -210,15 +271,60 @@ function AdminCommunityDetail() {
             </h2>
             <ul className="mt-4 space-y-2">
               {community.resources.map((r) => (
-                <li key={r.label} className="rounded-lg bg-secondary/50 px-3 py-2 text-sm">
-                  <p className="font-medium">{r.label}</p>
-                  <p className="text-xs text-muted-foreground">{r.note}</p>
+                <li key={r.label} className="flex items-start justify-between gap-2 rounded-lg bg-secondary/50 px-3 py-2 text-sm">
+                  <div>
+                    <p className="font-medium">{r.label}</p>
+                    <p className="text-xs text-muted-foreground">{r.note}</p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() =>
+                      saveCommunity({
+                        ...community,
+                        resources: community.resources.filter((x) => x.label !== r.label),
+                      })
+                    }
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </li>
               ))}
               {community.resources.length === 0 && (
                 <li className="text-sm text-muted-foreground">No resources yet.</li>
               )}
             </ul>
+            <div className="mt-4 space-y-2 border-t border-border pt-4">
+              <Label className="text-xs">Add resource</Label>
+              <Input
+                placeholder="Label"
+                value={resourceDraft.label}
+                onChange={(e) => setResourceDraft({ ...resourceDraft, label: e.target.value })}
+              />
+              <Input
+                placeholder="Note or link description"
+                value={resourceDraft.note}
+                onChange={(e) => setResourceDraft({ ...resourceDraft, note: e.target.value })}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                disabled={!resourceDraft.label.trim()}
+                onClick={() => {
+                  saveCommunity({
+                    ...community,
+                    resources: [
+                      ...community.resources,
+                      { label: resourceDraft.label.trim(), note: resourceDraft.note.trim() },
+                    ],
+                  });
+                  setResourceDraft({ label: "", note: "" });
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" /> Add resource
+              </Button>
+            </div>
           </div>
 
           <div className="surface p-5">

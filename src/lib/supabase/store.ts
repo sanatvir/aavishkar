@@ -54,6 +54,8 @@ export type StudentSettings = {
   notifyCommunities: boolean;
 };
 
+export type StudentPrivacy = Pick<StudentSettings, "showClass" | "allowMessages" | "showProjectsPublic">;
+
 export const defaultStudentSettings = (): StudentSettings => ({
   showInDiscover: true,
   showClass: true,
@@ -115,6 +117,7 @@ export type AppDataSnapshot = {
   studentSettings: StudentSettings;
   platformSettings: PlatformSettings;
   discoverHiddenIds: string[];
+  studentPrivacyMap: Record<string, StudentPrivacy>;
   communityMembers: Record<string, string[]>;
   communityJoinApplications: CommunityJoinApplication[];
   communityPosts: CommunityPost[];
@@ -508,7 +511,7 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
     supabase.from("activity_log").select("*").order("created_at", { ascending: false }).limit(12),
     supabase.from("student_settings").select("*").eq("student_id", userId).maybeSingle(),
     supabase.from("platform_settings").select("*").eq("id", "default").maybeSingle(),
-    supabase.from("student_settings").select("student_id, show_in_discover"),
+    supabase.from("student_settings").select("student_id, show_in_discover, show_class, allow_messages, show_projects_public"),
     supabase.from("opportunity_registrations").select("opportunity_id").eq("student_id", userId),
     supabase.from("community_members").select("community_id"),
     supabase.from("community_join_applications").select("*"),
@@ -530,6 +533,15 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
     : (allSettingsRes.data ?? [])
         .filter((s) => s.show_in_discover === false)
         .map((s) => s.student_id);
+
+  const studentPrivacyMap: Record<string, StudentPrivacy> = {};
+  for (const row of allSettingsRes.data ?? []) {
+    studentPrivacyMap[row.student_id] = {
+      showClass: row.show_class !== false,
+      allowMessages: row.allow_messages !== false,
+      showProjectsPublic: row.show_projects_public === true,
+    };
+  }
 
   const commentsByIdea = new Map<string, Idea["comments"]>();
   for (const c of commentsRes.data ?? []) {
@@ -709,6 +721,7 @@ export async function loadAppData(userId: string): Promise<AppDataSnapshot | nul
       ? mapPlatformSettings(platformSettingsRes.data)
       : defaultPlatformSettings(),
     discoverHiddenIds,
+    studentPrivacyMap,
     communityMembers: communityMembersMap,
     communityJoinApplications,
     communityPosts,
@@ -1100,6 +1113,54 @@ export async function insertEvent(event: PlatformEvent & { seatsTotal?: number |
 export async function deleteEvent(id: string) {
   if (!isSupabaseConfigured) return;
   await supabase.from("events").delete().eq("id", id);
+}
+
+export async function updateEvent(event: PlatformEvent & { seatsTotal?: number | null }) {
+  if (!isSupabaseConfigured) return;
+  const match = /^(\d+)\s*\/\s*(\d+)$/.exec(event.seats);
+  const seatsTotal = event.seatsTotal ?? (match ? Number(match[2]) : null);
+  const seatsFilled = match ? Number(match[1]) : 0;
+  await supabase
+    .from("events")
+    .update({
+      title: event.title,
+      event_date: event.date,
+      place: event.place,
+      seats_total: seatsTotal,
+      seats_filled: seatsFilled,
+    })
+    .eq("id", event.id);
+}
+
+export async function updateOpportunity(opportunity: Opportunity) {
+  if (!isSupabaseConfigured) return;
+  await supabase.from("opportunities").update(opportunity).eq("id", opportunity.id);
+}
+
+export async function updateCommunityRecord(community: Community) {
+  if (!isSupabaseConfigured) return;
+  await supabase
+    .from("communities")
+    .update({
+      name: community.name,
+      description: community.description,
+      activity: community.activity,
+      accent: community.accent,
+      sessions: community.sessions,
+      resources: community.resources,
+    })
+    .eq("id", community.id);
+}
+
+export async function rejectIdea(ideaId: string) {
+  if (!isSupabaseConfigured) return;
+  await supabase.from("ideas").delete().eq("id", ideaId);
+}
+
+export async function ensureConversation(userId: string, withId: string) {
+  if (!isSupabaseConfigured) return;
+  const [a, b] = pairKey(userId, withId);
+  await supabase.from("conversations").upsert({ id: withId, participant_a: a, participant_b: b });
 }
 
 export async function insertReport(report: Report) {

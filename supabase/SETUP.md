@@ -50,6 +50,17 @@ node scripts/setup-storage.mjs
 
 Verify in **Storage**: buckets `avatars` and `project-files` appear. Test profile upload in **Settings → Profile**.
 
+## 2f. Community features, auth columns, realtime
+
+Run in order after `005_storage.sql`:
+
+| File | Purpose |
+|------|---------|
+| `006_community_features.sql` | Join applications, community posts, report targets |
+| `007_auth_communities.sql` | Community sessions/resources JSON + auth code columns |
+| `008_students_realtime.sql` | Live sync for student roster |
+| `009_realtime_all.sql` | Live sync for messages, ideas, projects, communities, etc. |
+
 ## 3. Seed data
 
 Demo seeding is **off by default**. For local demos with the 10 sample students, add to `.env`:

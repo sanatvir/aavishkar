@@ -30,7 +30,7 @@ import {
   type Student,
 } from "./mock-data";
 import type { ActivityItem } from "./admin-metrics";
-import { defaultStudentSettings, type PlatformEvent, type PlatformSettings } from "./supabase/store";
+import { defaultStudentSettings, type PlatformEvent, type PlatformSettings, type StudentPrivacy } from "./supabase/store";
 import { isSupabaseConfigured } from "./supabase/client";
 
 /** Local dev without Supabase — in-memory demo using seed data. */
@@ -83,6 +83,7 @@ export type RuntimeBootstrap = {
   studentSettings: ReturnType<typeof defaultStudentSettings>;
   platformSettings: PlatformSettings;
   discoverHiddenIds: string[];
+  studentPrivacyMap: Record<string, StudentPrivacy>;
 };
 
 export function createDemoRuntimeBootstrap(): RuntimeBootstrap {
@@ -113,6 +114,7 @@ export function createDemoRuntimeBootstrap(): RuntimeBootstrap {
     studentSettings: defaultStudentSettings(),
     platformSettings: defaultPlatformSettings(),
     discoverHiddenIds: [],
+    studentPrivacyMap: {},
   };
 }
 
@@ -144,6 +146,7 @@ export function createLiveRuntimeBootstrap(): RuntimeBootstrap {
     studentSettings: defaultStudentSettings(),
     platformSettings: defaultPlatformSettings(),
     discoverHiddenIds: [],
+    studentPrivacyMap: {},
   };
 }
 

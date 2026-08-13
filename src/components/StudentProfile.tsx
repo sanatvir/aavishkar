@@ -9,7 +9,7 @@ import { type Student } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 export function StudentProfile({ student, embedded }: { student: Student; embedded?: boolean | undefined }) {
-  const { isConnected, toggleConnection, currentUser, updateProfilePicture, communities, communityMembers } =
+  const { isConnected, toggleConnection, currentUser, updateProfilePicture, communities, communityMembers, canMessageStudent } =
     useAppState();
   const isMe = student.id === currentUser.id;
   const connected = isConnected(student.id);
@@ -56,11 +56,13 @@ export function StudentProfile({ student, embedded }: { student: Student; embedd
                 >
                   {connected ? "Connected" : "Connect"}
                 </Button>
-                <Button asChild variant="outline" className="gap-2">
-                  <Link to="/app/messages" search={{ with: student.id }}>
-                    <MessageSquare className="h-4 w-4" /> Message
-                  </Link>
-                </Button>
+                {canMessageStudent(student.id) && (
+                  <Button asChild variant="outline" className="gap-2">
+                    <Link to="/app/messages" search={{ with: student.id }}>
+                      <MessageSquare className="h-4 w-4" /> Message
+                    </Link>
+                  </Button>
+                )}
               </div>
             )}
           </div>

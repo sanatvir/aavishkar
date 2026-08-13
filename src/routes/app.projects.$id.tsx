@@ -20,9 +20,10 @@ export const Route = createFileRoute("/app/projects/$id")({
 
 function Workspace() {
   const { id } = Route.useParams();
-  const { projects, toggleTask, sendProjectChat, findStudent, currentUser, addProjectFile, isConnected, toggleConnection } =
+  const { projects, toggleTask, sendProjectChat, postProjectUpdate, inviteToProject, findStudent, currentUser, addProjectFile, isConnected, toggleConnection, connections, students } =
     useAppState();
   const [message, setMessage] = useState("");
+  const [updateText, setUpdateText] = useState("");
 
   const project = projects.find((p) => p.id === id);
   if (!project) {
@@ -185,6 +186,27 @@ function Workspace() {
         </TabsContent>
 
         <TabsContent value="updates" className="mt-6 space-y-3">
+          {project.memberIds.includes(currentUser.id) && (
+            <form
+              className="surface flex gap-2 p-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!updateText.trim()) return;
+                postProjectUpdate(project.id, updateText);
+                setUpdateText("");
+              }}
+            >
+              <Input
+                value={updateText}
+                onChange={(e) => setUpdateText(e.target.value)}
+                placeholder="Share a progress update with your team..."
+                className="h-11"
+              />
+              <Button type="submit" disabled={!updateText.trim()}>
+                Post
+              </Button>
+            </form>
+          )}
           {project.updates.map((u, i) => {
             const s = findStudent(u.authorId);
             return (
@@ -204,7 +226,30 @@ function Workspace() {
           )}
         </TabsContent>
 
-        <TabsContent value="team" className="mt-6 grid gap-4 sm:grid-cols-2">
+        <TabsContent value="team" className="mt-6 space-y-4">
+          {project.memberIds.includes(currentUser.id) && (
+            <div className="surface p-5">
+              <p className="text-sm font-semibold">Invite a teammate</p>
+              <p className="mt-1 text-xs text-muted-foreground">Pick from your connections who are not already on this project.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {connections
+                  .filter((id) => !project.memberIds.includes(id))
+                  .map((id) => {
+                    const s = students.find((st) => st.id === id);
+                    if (!s) return null;
+                    return (
+                      <Button key={id} size="sm" variant="outline" onClick={() => inviteToProject(project.id, id)}>
+                        Invite {s.name.split(" ")[0]}
+                      </Button>
+                    );
+                  })}
+                {connections.filter((id) => !project.memberIds.includes(id)).length === 0 && (
+                  <p className="text-sm text-muted-foreground">Connect with students in People to invite them here.</p>
+                )}
+              </div>
+            </div>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
           {project.memberIds.map((m) => {
             const s = findStudent(m);
             if (!s) return null;
@@ -240,6 +285,7 @@ function Workspace() {
               </div>
             );
           })}
+          </div>
         </TabsContent>
 
         <TabsContent value="chat" className="mt-6">

@@ -48,7 +48,7 @@ function Row({
 
 function SettingsPage() {
   const navigate = useNavigate();
-  const { currentUser, updateProfile, updateProfilePicture, studentSettings, updateStudentSettings } = useAppState();
+  const { currentUser, updateProfile, updateProfilePicture, studentSettings, updateStudentSettings, exportUserData } = useAppState();
   const [name, setName] = useState(currentUser.name);
   const [className, setClassName] = useState(currentUser.className);
   const [bio, setBio] = useState(currentUser.bio);
@@ -180,11 +180,11 @@ function SettingsPage() {
           <div>
             <p className="text-sm font-medium">School account</p>
             <p className="text-xs text-muted-foreground">
-              {currentUser.name} · APS Dhaula Kuan (demo session until Microsoft auth is enabled)
+              {currentUser.name} · APS Dhaula Kuan
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => toast.message("Export will be available with full auth")}>
+            <Button variant="outline" onClick={exportUserData}>
               Export my data
             </Button>
             <Button variant="outline" onClick={signOut}>

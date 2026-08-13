@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Chip, PageHeader, ProgressBar, Avatar } from "@/components/ui-kit/primitives";
+import { Button } from "@/components/ui/button";
 import { useAppState } from "@/lib/app-state";
 
 export const Route = createFileRoute("/admin/projects")({
@@ -21,10 +22,10 @@ function AdminProjects() {
     <>
       <PageHeader title="Projects" subtitle="Every project running under ATL • APSDK." />
       <div className="surface overflow-x-auto">
-        <table className="w-full min-w-[760px] text-sm">
+        <table className="w-full min-w-[860px] text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
-              {["Project", "Team", "Progress", "Deadline", "Status"].map((h) => (
+              {["Project", "Team", "Progress", "Deadline", "Status", ""].map((h) => (
                 <th key={h} className="px-5 py-3.5 font-semibold">
                   {h}
                 </th>
@@ -55,6 +56,13 @@ function AdminProjects() {
                 <td className="px-5 py-4 text-muted-foreground">{p.deadline}</td>
                 <td className="px-5 py-4">
                   <Chip tone={p.status === "Active" ? "success" : "neutral"}>{p.status}</Chip>
+                </td>
+                <td className="px-5 py-4 text-right">
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/app/projects/$id" params={{ id: p.id }}>
+                      Open workspace
+                    </Link>
+                  </Button>
                 </td>
               </tr>
             ))}

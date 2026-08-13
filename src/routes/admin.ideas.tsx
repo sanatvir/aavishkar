@@ -11,7 +11,7 @@ export const Route = createFileRoute("/admin/ideas")({
 });
 
 function AdminIdeasModeration() {
-  const { pendingIdeas, publishIdea, findStudent } = useAppState();
+  const { pendingIdeas, publishIdea, rejectIdea, findStudent } = useAppState();
 
   return (
     <>
@@ -38,9 +38,14 @@ function AdminIdeasModeration() {
                 </div>
                 <p className="text-sm">{idea.problem}</p>
                 <p className="text-sm text-muted-foreground">{idea.solution}</p>
-                <Button size="sm" onClick={() => publishIdea(idea.id)}>
-                  Publish to Idea Hub
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => publishIdea(idea.id)}>
+                    Publish to Idea Hub
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => rejectIdea(idea.id)}>
+                    Reject
+                  </Button>
+                </div>
               </article>
             );
           })}

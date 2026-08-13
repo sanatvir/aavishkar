@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, MapPin, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Chip, PageHeader } from "@/components/ui-kit/primitives";
 import { Button } from "@/components/ui/button";
@@ -13,15 +13,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAppState } from "@/lib/app-state";
+import type { PlatformEvent } from "@/lib/supabase/store";
 
 export const Route = createFileRoute("/admin/events")({
   component: AdminEvents,
 });
 
 function AdminEvents() {
-  const { events, addEvent, removeEvent } = useAppState();
+  const { events, addEvent, saveEvent, removeEvent } = useAppState();
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState({ title: "", date: "", place: "", seatsTotal: "" });
+  const [editDraft, setEditDraft] = useState<PlatformEvent | null>(null);
 
   const publish = () => {
     if (!draft.title.trim()) return;
@@ -48,6 +51,16 @@ function AdminEvents() {
               <h3 className="min-w-0 font-semibold">{e.title}</h3>
               <div className="flex items-center gap-2">
                 <Chip tone="accent">{e.seats}</Chip>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditDraft(e);
+                    setEditOpen(true);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
                 <Button size="icon" variant="ghost" onClick={() => removeEvent(e.id)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -89,6 +102,59 @@ function AdminEvents() {
           <DialogFooter>
             <Button onClick={publish}>Publish event</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit event</DialogTitle>
+          </DialogHeader>
+          {editDraft && (
+            <>
+              <div className="grid gap-3">
+                <div className="space-y-1.5">
+                  <Label>Title</Label>
+                  <Input
+                    value={editDraft.title}
+                    onChange={(e) => setEditDraft({ ...editDraft, title: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Date</Label>
+                  <Input
+                    value={editDraft.date}
+                    onChange={(e) => setEditDraft({ ...editDraft, date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Place</Label>
+                  <Input
+                    value={editDraft.place}
+                    onChange={(e) => setEditDraft({ ...editDraft, place: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Seats (e.g. 12 / 48)</Label>
+                  <Input
+                    value={editDraft.seats}
+                    onChange={(e) => setEditDraft({ ...editDraft, seats: e.target.value })}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  onClick={() => {
+                    if (!editDraft) return;
+                    saveEvent(editDraft);
+                    setEditOpen(false);
+                  }}
+                >
+                  Save changes
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>

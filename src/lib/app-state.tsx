@@ -50,6 +50,7 @@ import {
   deleteCommunity,
   deleteNotification,
   deleteOpportunity,
+  ensureConversation,
   ensureSeeded,
   insertApplication,
   insertCommunity,
@@ -68,6 +69,7 @@ import {
   logActivity,
   publishIdeaLive,
   registerOpportunity,
+  rejectIdea as deleteIdeaLive,
   syncApplicationStage,
   syncCommunity,
   syncCommunityJoinApplicationStatus,
@@ -84,6 +86,9 @@ import {
   syncShortlistMany,
   syncStudentSettings,
   syncStudentRecord,
+  updateCommunityRecord,
+  updateEvent,
+  updateOpportunity,
   updateStudent,
   updateStudentAvatar,
   updateStudentStatus,
@@ -92,6 +97,7 @@ import {
   upsertProject,
   type PlatformEvent,
   type PlatformSettings,
+  type StudentPrivacy,
   type StudentSettings,
 } from "./supabase/store";
 import { getSessionUserId, getSessionPortal, COORDINATOR_AUTHOR_ID } from "./session";
@@ -154,6 +160,7 @@ type AppState = {
   setCommunityJoinApplicationStatus: (id: string, status: "Accepted" | "Rejected") => void;
   addCommunity: (draft: NewCommunity) => void;
   removeCommunity: (id: string) => void;
+  saveCommunity: (community: Community) => void;
 
   ideas: Idea[];
   supported: string[];
@@ -167,9 +174,13 @@ type AppState = {
   addProject: (p: NewProject) => void;
   toggleTask: (projectId: string, taskId: string) => void;
   sendProjectChat: (projectId: string, text: string) => void;
+  postProjectUpdate: (projectId: string, text: string) => void;
+  inviteToProject: (projectId: string, studentId: string) => void;
 
   conversations: Conversation[];
   sendMessage: (conversationId: string, text: string) => void;
+  startConversation: (withId: string) => string | null;
+  canMessageStudent: (id: string) => boolean;
   markConversationRead: (conversationId: string) => void;
 
   notifications: Notification[];
@@ -201,11 +212,14 @@ type AppState = {
 
   events: PlatformEvent[];
   addEvent: (draft: NewEvent) => void;
+  saveEvent: (event: PlatformEvent) => void;
   removeEvent: (id: string) => void;
   addOpportunity: (draft: NewOpportunity) => void;
+  saveOpportunity: (opportunity: Opportunity) => void;
   removeOpportunity: (id: string) => void;
   pendingIdeas: Idea[];
   publishIdea: (id: string) => void;
+  rejectIdea: (id: string) => void;
   restrictStudent: (id: string) => void;
   reactivateStudent: (id: string) => void;
   addStudent: (draft: NewStudent) => void;
@@ -221,8 +235,10 @@ type AppState = {
   skillDistribution: SkillCount[];
   categorySplit: CategoryCount[];
   directoryStudents: Student[];
+  publicStudent: (student: Student) => Student;
   studentSettings: StudentSettings;
   updateStudentSettings: (patch: Partial<StudentSettings>, opts?: { silent?: boolean }) => void;
+  exportUserData: () => void;
   platformSettings: PlatformSettings;
   updatePlatformSettings: (patch: Partial<PlatformSettings>, opts?: { silent?: boolean }) => void;
 };
@@ -281,6 +297,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [studentSettings, setStudentSettings] = useState<StudentSettings>(initialRuntime.studentSettings);
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(initialRuntime.platformSettings);
   const [discoverHiddenIds, setDiscoverHiddenIds] = useState<string[]>(initialRuntime.discoverHiddenIds);
+  const [studentPrivacyMap, setStudentPrivacyMap] = useState<Record<string, StudentPrivacy>>(
+    initialRuntime.studentPrivacyMap,
+  );
   const loadGeneration = useRef(0);
 
   const applyRuntimeState = (data: RuntimeBootstrap | NonNullable<Awaited<ReturnType<typeof loadAppData>>>) => {
@@ -313,6 +332,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       institution: INSTITUTION_NAME,
     });
     setDiscoverHiddenIds(data.discoverHiddenIds);
+    setStudentPrivacyMap(data.studentPrivacyMap ?? {});
     setCommunityJoinApplications(data.communityJoinApplications);
     setCommunityPosts(data.communityPosts);
   };
@@ -374,6 +394,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
     const notifyStudent = (targetId: string, kind: Notification["kind"], text: string) => {
       if (targetId === userId) {
+        const notifyKey: Partial<Record<Notification["kind"], keyof StudentSettings>> = {
+          connection: "notifyConnections",
+          project: "notifyProjects",
+          recruitment: "notifyProjects",
+          opportunity: "notifyOpportunities",
+          community: "notifyCommunities",
+          idea: "notifyProjects",
+        };
+        const key = notifyKey[kind];
+        if (key && !studentSettings[key]) return;
         setNotifications((prev) => [
           { id: `n-${Date.now()}`, kind, text, time: "just now", read: false },
           ...prev,
@@ -381,6 +411,24 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         return;
       }
       void insertNotification(targetId, kind, text);
+    };
+
+    const privacyFor = (id: string): StudentPrivacy =>
+      studentPrivacyMap[id] ?? { showClass: true, allowMessages: true, showProjectsPublic: false };
+
+    const canMessageStudent = (id: string) => {
+      if (id === userId) return true;
+      return privacyFor(id).allowMessages;
+    };
+
+    const publicStudent = (student: Student): Student => {
+      if (student.id === userId) return student;
+      const privacy = privacyFor(student.id);
+      return {
+        ...student,
+        className: privacy.showClass ? student.className : "Class hidden",
+        projects: privacy.showProjectsPublic || connections.includes(student.id) ? student.projects : [],
+      };
     };
 
     const userScopedProjects = projects.map((p) => ({
@@ -400,9 +448,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const categorySplit = buildCategorySplit(ideas);
     const engagementSeries = buildEngagementSeries(students, projects, projectCreatedAt);
     const mergedActivity = mergeActivity(activity, ideas, applications, students);
-    const directoryStudents = students.filter(
-      (s) => s.id === userId || !discoverHiddenIds.includes(s.id),
-    );
+    const directoryStudents = students
+      .filter((s) => s.id === userId || !discoverHiddenIds.includes(s.id))
+      .map(publicStudent);
     const pendingIdeas = ideas.filter((i) => i.reviewStatus === "pending");
     const publishedIdeas = ideas.filter(
       (i) => i.reviewStatus !== "pending" || i.creatorId === userId,
@@ -422,7 +470,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       currentUser: me,
       communities,
       opportunities,
-      findStudent: (id: string) => students.find((s) => s.id === id),
+      findStudent: (id: string) => {
+        const student = students.find((s) => s.id === id);
+        return student ? publicStudent(student) : undefined;
+      },
       updateProfile: (patch) => {
         const updated: Student = { ...me, ...patch };
         setStudents((prev) => {
@@ -473,6 +524,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           if (!has) {
             notifyStudent(id, "connection", `${me.name} sent you a connection request`);
             pushActivity(`${me.name} connected with ${nameOf(id)}`);
+            if (platformSettings.autoFlagConnections) {
+              const report: Report = {
+                id: `r-${Date.now()}`,
+                target: nameOf(id),
+                targetId: id,
+                kind: "User",
+                reason: `Auto-flagged new connection with ${me.name}`,
+                date: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+                status: "Open",
+              };
+              setReports((reports) => [report, ...reports]);
+              void insertReport(report);
+            }
           }
           return has ? prev.filter((c) => c !== id) : [...prev, id];
         });
@@ -655,6 +719,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         void deleteCommunity(id);
         toast.message(`${name} removed`);
       },
+      saveCommunity: (community) => {
+        if (getSessionPortal() !== "admin") {
+          toast.error("Only ATL coordinators can update communities.");
+          return;
+        }
+        setCommunities((prev) => prev.map((c) => (c.id === community.id ? community : c)));
+        void updateCommunityRecord(community);
+        toast.success("Community updated");
+      },
 
       ideas: publishedIdeas,
       allIdeas: ideas,
@@ -834,20 +907,95 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           return next;
         });
       },
+      postProjectUpdate: (projectId, text) => {
+        const trimmed = text.trim();
+        if (!trimmed) return;
+        setProjects((prev) => {
+          const next = prev.map((p) =>
+            p.id === projectId
+              ? {
+                  ...p,
+                  updates: [
+                    {
+                      authorId: me.id,
+                      text: trimmed,
+                      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                    },
+                    ...p.updates,
+                  ],
+                }
+              : p,
+          );
+          const updated = next.find((p) => p.id === projectId);
+          if (updated) void upsertProject(updated);
+          return next;
+        });
+        toast.success("Update posted");
+      },
+      inviteToProject: (projectId, studentId) => {
+        const project = projects.find((p) => p.id === projectId);
+        if (!project || !project.memberIds.includes(userId)) {
+          toast.error("Only project members can invite teammates.");
+          return;
+        }
+        if (project.memberIds.includes(studentId)) {
+          toast.message(`${nameOf(studentId)} is already on this project.`);
+          return;
+        }
+        setProjects((prev) => {
+          const next = prev.map((p) =>
+            p.id === projectId ? { ...p, memberIds: [...p.memberIds, studentId] } : p,
+          );
+          const updated = next.find((p) => p.id === projectId);
+          if (updated) void upsertProject(updated);
+          return next;
+        });
+        setStudents((prev) => {
+          const next = prev.map((s) =>
+            s.id === studentId && !s.projects.includes(project.title)
+              ? { ...s, projects: [...s.projects, project.title] }
+              : s,
+          );
+          const updated = next.find((s) => s.id === studentId);
+          if (updated) void syncStudentRecord(updated);
+          return next;
+        });
+        notifyStudent(studentId, "project", `${me.name} invited you to “${project.title}”`);
+        toast.success(`Invited ${nameOf(studentId)}`);
+      },
 
       conversations,
+      canMessageStudent,
+      startConversation: (withId) => {
+        if (!canMessageStudent(withId)) {
+          toast.error(`${nameOf(withId)} is not accepting messages.`);
+          return null;
+        }
+        const existing = conversations.find((c) => c.withId === withId);
+        if (existing) return existing.id;
+        const convo: Conversation = { id: withId, withId, unread: 0, messages: [] };
+        setConversations((prev) => [convo, ...prev]);
+        void ensureConversation(userId, withId);
+        return withId;
+      },
       sendMessage: (conversationId, text) => {
+        if (!canMessageStudent(conversationId)) {
+          toast.error(`${nameOf(conversationId)} is not accepting messages.`);
+          return;
+        }
         const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        setConversations((prev) =>
-          prev.map((c) =>
+        setConversations((prev) => {
+          const has = prev.some((c) => c.id === conversationId);
+          const base = has
+            ? prev
+            : [{ id: conversationId, withId: conversationId, unread: 0, messages: [] }, ...prev];
+          return base.map((c) =>
             c.id === conversationId
-              ? {
-                  ...c,
-                  messages: [...c.messages, { fromMe: true, text, time }],
-                }
+              ? { ...c, messages: [...c.messages, { fromMe: true, text, time }] }
               : c,
-          ),
-        );
+          );
+        });
+        void ensureConversation(userId, conversationId);
         void insertMessage(userId, conversationId, text, conversationId);
         void bumpConversationUnread(conversationId, conversationId);
         notifyStudent(conversationId, "message", `${me.name} sent you a message`);
@@ -1022,6 +1170,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         void deleteEvent(id);
         toast.message("Event removed");
       },
+      saveEvent: (event) => {
+        setEvents((prev) => prev.map((e) => (e.id === event.id ? event : e)));
+        void updateEvent(event);
+        toast.success("Event saved");
+      },
       addOpportunity: (draft) => {
         const opp = buildOpportunityFromDraft(
           draft,
@@ -1035,6 +1188,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setOpportunities((prev) => prev.filter((o) => o.id !== id));
         void deleteOpportunity(id);
         toast.message("Opportunity removed");
+      },
+      saveOpportunity: (opportunity) => {
+        setOpportunities((prev) => prev.map((o) => (o.id === opportunity.id ? opportunity : o)));
+        void updateOpportunity(opportunity);
+        toast.success("Opportunity saved");
       },
       publishIdea: (id) => {
         const idea = ideas.find((i) => i.id === id);
@@ -1056,6 +1214,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         );
         void publishIdeaLive(id, idea.creatorId);
         toast.success("Idea published to the school");
+      },
+      rejectIdea: (id) => {
+        const idea = ideas.find((i) => i.id === id);
+        if (!idea) return;
+        setIdeas((prev) => prev.filter((i) => i.id !== id));
+        void deleteIdeaLive(id);
+        notifyStudent(idea.creatorId, "idea", `Your idea “${idea.title}” was not approved for the Idea Hub.`);
+        toast.message("Idea rejected");
       },
       restrictStudent: (id) => {
         setStudents((prev) => {
@@ -1154,7 +1320,28 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       skillDistribution,
       categorySplit,
       directoryStudents,
+      publicStudent,
       studentSettings,
+      exportUserData: () => {
+        const payload = {
+          profile: me,
+          settings: studentSettings,
+          connections,
+          ideas: ideas.filter((i) => i.creatorId === userId),
+          projects: projects.filter((p) => p.memberIds.includes(userId)),
+          communities: joinedCommunities,
+          notifications,
+          exportedAt: new Date().toISOString(),
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `aavishkar-${userId}-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Your data export downloaded");
+      },
       updateStudentSettings: (patch, opts) => {
         setStudentSettings((prev) => {
           const next = { ...prev, ...patch };
@@ -1163,6 +1350,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             setDiscoverHiddenIds((ids) =>
               patch.showInDiscover ? ids.filter((i) => i !== userId) : [...new Set([...ids, userId])],
             );
+          }
+          if (
+            patch.showClass !== undefined ||
+            patch.allowMessages !== undefined ||
+            patch.showProjectsPublic !== undefined
+          ) {
+            setStudentPrivacyMap((map) => ({
+              ...map,
+              [userId]: {
+                showClass: next.showClass,
+                allowMessages: next.allowMessages,
+                showProjectsPublic: next.showProjectsPublic,
+              },
+            }));
           }
           if (!opts?.silent) toast.success("Preferences saved");
           return next;
@@ -1214,6 +1415,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     studentSettings,
     platformSettings,
     discoverHiddenIds,
+    studentPrivacyMap,
   ]);
 
   if (requiresSupabaseConfig) {

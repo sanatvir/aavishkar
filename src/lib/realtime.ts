@@ -31,6 +31,9 @@ export function subscribeAppChanges(userId: string, onChange: () => void) {
       { event: "*", schema: "public", table: "community_join_applications" },
       schedule,
     )
+    .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, schedule)
+    .on("postgres_changes", { event: "*", schema: "public", table: "communities" }, schedule)
+    .on("postgres_changes", { event: "*", schema: "public", table: "community_posts" }, schedule)
     .subscribe();
 
   return () => {

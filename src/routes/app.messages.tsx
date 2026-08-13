@@ -24,7 +24,7 @@ export const Route = createFileRoute("/app/messages")({
 
 function MessagesPage() {
   const { with: withStudentId } = Route.useSearch();
-  const { conversations, sendMessage, markConversationRead, findStudent } = useAppState();
+  const { conversations, sendMessage, markConversationRead, findStudent, startConversation } = useAppState();
   const [activeId, setActiveId] = useState(conversations[0]?.id ?? "");
   const [text, setText] = useState("");
 
@@ -34,8 +34,11 @@ function MessagesPage() {
     if (match) {
       setActiveId(match.id);
       markConversationRead(match.id);
+      return;
     }
-  }, [withStudentId, conversations, markConversationRead]);
+    const id = startConversation(withStudentId);
+    if (id) setActiveId(id);
+  }, [withStudentId, conversations, markConversationRead, startConversation]);
 
   const active = conversations.find((c) => c.id === activeId) ?? conversations[0];
   const partner = active ? findStudent(active.withId) : undefined;
