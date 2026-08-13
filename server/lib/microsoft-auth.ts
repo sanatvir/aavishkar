@@ -65,13 +65,22 @@ export function buildMicrosoftAuthorizeUrl(origin: string): string {
   const { clientId, tenantId } = getAzureConfig();
   const redirectUri = `${origin}/api/auth/microsoft/callback`;
   const state = createOAuthState();
+  const scope = [
+    "openid",
+    "profile",
+    "email",
+    "offline_access",
+    "https://graph.microsoft.com/User.Read",
+  ].join(" ");
   const params = new URLSearchParams({
     client_id: clientId,
     response_type: "code",
     redirect_uri: redirectUri,
     response_mode: "query",
-    scope: "openid profile email User.Read",
+    scope,
     state,
+    // Force interactive login — avoids AADSTS50058 silent sign-in failures
+    prompt: "select_account",
   });
   return `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?${params.toString()}`;
 }
@@ -104,13 +113,20 @@ type TokenResponse = {
 export async function exchangeMicrosoftCode(code: string, origin: string): Promise<TokenResponse> {
   const { clientId, clientSecret, tenantId } = getAzureConfig();
   const redirectUri = `${origin}/api/auth/microsoft/callback`;
+  const scope = [
+    "openid",
+    "profile",
+    "email",
+    "offline_access",
+    "https://graph.microsoft.com/User.Read",
+  ].join(" ");
   const body = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,
     code,
     redirect_uri: redirectUri,
     grant_type: "authorization_code",
-    scope: "openid profile email User.Read",
+    scope,
   });
 
   const res = await fetch(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`, {
