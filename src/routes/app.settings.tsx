@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAppState } from "@/lib/app-state";
+import { signOutMicrosoftAuth } from "@/lib/microsoft-auth";
 import { clearSession } from "@/lib/session";
 
 export const Route = createFileRoute("/app/settings")({
@@ -63,6 +64,7 @@ function SettingsPage() {
   };
 
   const signOut = () => {
+    void signOutMicrosoftAuth();
     clearSession();
     toast.message("Signed out");
     navigate({ to: "/" });
@@ -180,7 +182,7 @@ function SettingsPage() {
           <div>
             <p className="text-sm font-medium">School account</p>
             <p className="text-xs text-muted-foreground">
-              {currentUser.name} · APS Dhaula Kuan · signed in on this device
+              {currentUser.name} · APS Dhaula Kuan · Microsoft school account
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

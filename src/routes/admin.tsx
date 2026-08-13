@@ -16,12 +16,12 @@ import {
 import { AppShell, type NavItem } from "@/components/layout/AppShell";
 import { INSTITUTION_NAME } from "@/lib/brand";
 import { useAppState } from "@/lib/app-state";
-import { hasAdminSession } from "@/lib/session";
+import { getSessionPortal } from "@/lib/session";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: () => {
-    if (typeof window !== "undefined" && !hasAdminSession()) {
-      throw redirect({ to: "/login/admin" });
+    if (typeof window !== "undefined" && getSessionPortal() !== "admin") {
+      throw redirect({ to: "/" });
     }
   },
   component: AdminLayout,

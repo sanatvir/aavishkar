@@ -1,16 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
 import { StudentProfile } from "@/components/StudentProfile";
 import { Avatar, Chip, PageHeader } from "@/components/ui-kit/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { loadStudentSignInCode, updateStudentSignInCode } from "@/lib/auth";
 import { useAppState } from "@/lib/app-state";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { type Student } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/admin/students")({
@@ -29,23 +25,6 @@ function AdminStudents() {
   const { students, restrictStudent } = useAppState();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<Student | null>(null);
-  const [signInCode, setSignInCode] = useState("");
-  const [loadingCode, setLoadingCode] = useState(false);
-
-  useEffect(() => {
-    if (!active) {
-      setSignInCode("");
-      return;
-    }
-    if (!isSupabaseConfigured) {
-      setSignInCode(active.id.toLowerCase());
-      return;
-    }
-    setLoadingCode(true);
-    loadStudentSignInCode(active.id)
-      .then((code) => setSignInCode(code ?? active.id.toLowerCase()))
-      .finally(() => setLoadingCode(false));
-  }, [active]);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -53,22 +32,6 @@ function AdminStudents() {
       !q ? true : [s.name, s.className, ...s.skills].join(" ").toLowerCase().includes(q),
     );
   }, [query, students]);
-
-  const saveSignInCode = async () => {
-    if (!active) return;
-    const trimmed = signInCode.trim().toLowerCase();
-    if (!trimmed) {
-      toast.error("Sign-in code cannot be empty.");
-      return;
-    }
-    if (!isSupabaseConfigured) {
-      toast.message("Sign-in codes sync when Supabase is connected.");
-      return;
-    }
-    const ok = await updateStudentSignInCode(active.id, trimmed);
-    if (ok) toast.success(`Sign-in code updated for ${active.name}.`);
-    else toast.error("Could not save sign-in code.");
-  };
 
   return (
     <>
@@ -144,32 +107,7 @@ function AdminStudents() {
           <SheetHeader>
             <SheetTitle>Student record</SheetTitle>
           </SheetHeader>
-          <div className="mt-4 space-y-6 px-4 pb-8">
-            {active && <StudentProfile student={active} embedded />}
-            {active && (
-              <div className="surface space-y-3 p-4">
-                <div>
-                  <p className="text-sm font-medium">Student sign-in code</p>
-                  <p className="text-xs text-muted-foreground">
-                    Share this with the student when &quot;Require sign-in codes&quot; is enabled.
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="sign-in-code">Personal code</Label>
-                  <Input
-                    id="sign-in-code"
-                    value={signInCode}
-                    onChange={(e) => setSignInCode(e.target.value)}
-                    disabled={loadingCode}
-                    autoComplete="off"
-                  />
-                </div>
-                <Button size="sm" onClick={() => void saveSignInCode()}>
-                  Save sign-in code
-                </Button>
-              </div>
-            )}
-          </div>
+          <div className="mt-4 px-4 pb-8">{active && <StudentProfile student={active} embedded />}</div>
         </SheetContent>
       </Sheet>
     </>

@@ -1,11 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Lightbulb, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { AavishkarLogo } from "@/components/brand/AavishkarLogo";
 import { LoginVisual } from "@/components/brand/LoginVisual";
 import { Button } from "@/components/ui/button";
+import { signInWithMicrosoft } from "@/lib/microsoft-auth";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { loadPublicStats } from "@/lib/supabase/store";
+import { setCoordinatorSession } from "@/lib/session";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -38,6 +41,7 @@ const MicrosoftGlyph = () => (
 function Landing() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ students: 0, ideas: 0, projects: 0 });
+  const [signingIn, setSigningIn] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -50,6 +54,20 @@ function Landing() {
     stats.students > 0 ? `${stats.students} students` : "Students across APSDK";
   const projectLabel =
     stats.projects > 0 ? `${stats.projects} ATL projects` : "ATL projects";
+
+  const continueWithMicrosoft = async () => {
+    setSigningIn(true);
+    try {
+      const result = await signInWithMicrosoft();
+      if (result === "demo") {
+        navigate({ to: "/app" });
+      }
+    } catch {
+      toast.error("Microsoft sign-in failed. Try again or contact your ATL coordinator.");
+    } finally {
+      setSigningIn(false);
+    }
+  };
 
   return (
     <div className="hero-mesh min-h-screen">
@@ -70,17 +88,21 @@ function Landing() {
             <Button
               size="lg"
               className="h-13 gap-3 px-6 text-base"
-              onClick={() => navigate({ to: "/login/student" })}
+              disabled={signingIn}
+              onClick={() => void continueWithMicrosoft()}
             >
               <MicrosoftGlyph />
-              Student sign-in
+              Continue with Microsoft
               <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               size="lg"
               className="h-13 gap-3 px-6 text-base"
-              onClick={() => navigate({ to: "/login/admin" })}
+              onClick={() => {
+                setCoordinatorSession();
+                navigate({ to: "/admin" });
+              }}
             >
               <ShieldCheck className="h-4 w-4" />
               Admin login
@@ -89,7 +111,7 @@ function Landing() {
 
           <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="h-3.5 w-3.5" />
-            Exclusively for APS Dhaula Kuan
+            Exclusively for APS Dhaula Kuan · @apsdk.edu.in accounts
           </p>
 
           <div className="mt-14 grid gap-4 sm:grid-cols-3">

@@ -19,7 +19,7 @@ import { hasStudentSession } from "@/lib/session";
 export const Route = createFileRoute("/app")({
   beforeLoad: () => {
     if (typeof window !== "undefined" && !hasStudentSession()) {
-      throw redirect({ to: "/login/student" });
+      throw redirect({ to: "/" });
     }
   },
   component: StudentLayout,
