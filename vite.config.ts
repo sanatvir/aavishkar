@@ -21,4 +21,8 @@ export default defineConfig({
   resolve: {
     dedupe: ["react", "react-dom", "@tanstack/react-router", "@tanstack/react-start"],
   },
+  server: {
+    host: true,
+    allowedHosts: true,
+  },
 });
