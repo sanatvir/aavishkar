@@ -93,6 +93,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     multiline: true,
   },
   {
+    kind: "text",
+    id: "reasonForJoining",
+    question: "Reason for joining the ATL Club",
+    placeholder: "e.g. I want to build real projects and find teammates who love making things",
+    multiline: true,
+  },
+  {
     kind: "mcq",
     id: "availability",
     question: "How available are you for teams right now?",
