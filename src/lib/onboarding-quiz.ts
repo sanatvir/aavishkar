@@ -81,6 +81,19 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     kind: "mcq",
+    id: "prevAtlExperience",
+    question: "Have you done ATL or project work before?",
+    options: ["Yes", "No"],
+  },
+  {
+    kind: "text",
+    id: "prevAtlDescription",
+    question: "Briefly describe your previous ATL/project experience",
+    placeholder: "e.g. Built a line-following robot for the ATL expo last year",
+    multiline: true,
+  },
+  {
+    kind: "mcq",
     id: "availability",
     question: "How available are you for teams right now?",
     options: ["Available", "Open to teams", "Busy"],
