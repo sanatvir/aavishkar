@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Search } from "lucide-react";
+import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -13,23 +15,50 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Avatar, Chip, PageHeader, ProgressBar, SectionHeading } from "@/components/ui-kit/primitives";
+import {
+  Avatar,
+  Chip,
+  PageHeader,
+  ProgressBar,
+  SectionHeading,
+} from "@/components/ui-kit/primitives";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAppState } from "@/lib/app-state";
+import { type Student } from "@/lib/types";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({
     meta: [
       { title: "ATL Admin Dashboard — AAVISHKAR" },
-      { name: "description", content: "Platform-wide view of APSDK students, projects, recruitment and events." },
+      {
+        name: "description",
+        content: "Platform-wide view of APSDK students, projects, recruitment and events.",
+      },
       { property: "og:title", content: "ATL Admin Dashboard — AAVISHKAR" },
-      { property: "og:description", content: "Talent, projects and recruitment analytics for ATL APSDK." },
+      {
+        property: "og:description",
+        content: "Talent, projects and recruitment analytics for ATL APSDK.",
+      },
     ],
   }),
   component: AdminDashboard,
 });
 
-const pieColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+const pieColors = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
 function AdminDashboard() {
   const {
@@ -42,6 +71,7 @@ function AdminDashboard() {
     activity,
     events,
     findStudent,
+    students,
   } = useAppState();
 
   return (
@@ -66,9 +96,14 @@ function AdminDashboard() {
         ))}
       </div>
 
+      <RegisteredStudentsPanel students={students} />
+
       <div className="mt-6 grid gap-4 xl:grid-cols-[1.4fr_1fr]">
         <div className="surface p-5">
-          <SectionHeading title="Platform growth" subtitle="Registered students and active projects" />
+          <SectionHeading
+            title="Platform growth"
+            subtitle="Registered students and active projects"
+          />
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={engagementSeries}>
@@ -113,7 +148,13 @@ function AdminDashboard() {
             {categorySplit.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={categorySplit} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90}>
+                  <Pie
+                    data={categorySplit}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={55}
+                    outerRadius={90}
+                  >
                     {categorySplit.map((_, i) => (
                       <Cell key={i} fill={pieColors[i % pieColors.length]} />
                     ))}
@@ -128,12 +169,17 @@ function AdminDashboard() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="flex h-full items-center justify-center text-sm text-muted-foreground">No ideas yet</p>
+              <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                No ideas yet
+              </p>
             )}
           </div>
           <div className="flex flex-wrap gap-2">
             {categorySplit.map((c, i) => (
-              <span key={c.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span
+                key={c.name}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground"
+              >
                 <span
                   className="h-2 w-2 rounded-full"
                   style={{ background: pieColors[i % pieColors.length] }}
@@ -250,5 +296,110 @@ function AdminDashboard() {
         </div>
       </div>
     </>
+  );
+}
+
+function RegisteredStudentsPanel({ students }: { students: Student[] }) {
+  const [query, setQuery] = useState("");
+  const [classFilter, setClassFilter] = useState("All");
+  const [interestFilter, setInterestFilter] = useState("All");
+
+  const classes = useMemo(
+    () => ["All", ...Array.from(new Set(students.map((s) => s.className))).sort()],
+    [students],
+  );
+  const interests = useMemo(
+    () => ["All", ...Array.from(new Set(students.flatMap((s) => s.interests))).sort()],
+    [students],
+  );
+
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return students.filter((s) => {
+      if (classFilter !== "All" && s.className !== classFilter) return false;
+      if (interestFilter !== "All" && !s.interests.includes(interestFilter)) return false;
+      if (!q) return true;
+      return [s.name, s.className, ...s.skills, ...s.interests].join(" ").toLowerCase().includes(q);
+    });
+  }, [students, query, classFilter, interestFilter]);
+
+  return (
+    <div className="surface p-5">
+      <SectionHeading
+        title="Registered students"
+        subtitle={`${students.length} registered · ${rows.length} shown`}
+        action={
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/admin/students">View directory</Link>
+          </Button>
+        }
+      />
+
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search students, skills or interests..."
+            className="h-10 rounded-xl pl-11"
+          />
+        </div>
+        <Select value={classFilter} onValueChange={setClassFilter}>
+          <SelectTrigger className="h-10 sm:w-48">
+            <SelectValue placeholder="All classes" />
+          </SelectTrigger>
+          <SelectContent>
+            {classes.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c === "All" ? "All classes" : c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={interestFilter} onValueChange={setInterestFilter}>
+          <SelectTrigger className="h-10 sm:w-52">
+            <SelectValue placeholder="All interest areas" />
+          </SelectTrigger>
+          <SelectContent>
+            {interests.map((i) => (
+              <SelectItem key={i} value={i}>
+                {i === "All" ? "All interest areas" : i}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="mt-4 max-h-80 space-y-2 overflow-y-auto pr-1">
+        {rows.map((s) => (
+          <div key={s.id} className="flex items-center gap-3 rounded-xl border border-border p-3">
+            <Avatar initials={s.initials} accent={s.accent} size="sm" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="truncate font-medium">{s.name}</span>
+                <Chip tone={s.status === "Active" ? "success" : "neutral"}>{s.status}</Chip>
+              </div>
+              <p className="truncate text-xs text-muted-foreground">{s.className}</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {s.interests.slice(0, 4).map((i) => (
+                  <Chip key={i} tone="accent">
+                    {i}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/admin/students">Open</Link>
+            </Button>
+          </div>
+        ))}
+        {rows.length === 0 && (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No students match your filters.
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
